@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run in Pico-8",
+      "type": "shell",
+      "command": "/Applications/PICO-8.app/Contents/MacOS/pico8",
+      "args": [
+        "-run",
+        "${workspaceFolder}/beat_horde.p8"
+      ],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      }
+    }
+  ]
+}
