@@ -48,6 +48,7 @@ end
 function _draw()
 	cls()
 	--camera(px - 64, py - 64)
+	print("⬆️ and ⬇️ to change tempo")
 	print(bpm)
 	print(pulse)
 	print("row: "..stat(21))
