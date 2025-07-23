@@ -48,7 +48,7 @@ end
 -->8
 function getinputvector()
 	local dx = (input.r and 1 or 0) - (input.l and 1 or 0)
-	local dy = (input.d and 1 or 0) - (input.u and 1 or 0)
+	local dy = (input.u and 1 or 0) - (input.d and 1 or 0)
 	return dx, dy
 end
 
@@ -112,12 +112,17 @@ function moveplayer()
 end
 
 function playershoot()
+	local dx = 0
+	local dy = 0
 	local firerate=0.25 --seconds per shot
 
 	if shootcooldown>0 then return
 	else shootcooldown=firerate*60 end
 
-	local dx, dy = getinputvector()
+	if facing.x=="r" then dx=1
+	elseif facing.x=="l" then dx=-1 end
+	if facing.y=="u" then dy=1
+	elseif facing.y=="d" then dy=-1 end
 
 	shoot(x, y, atan2(dx, dy))
 end
