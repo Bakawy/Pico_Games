@@ -4,6 +4,12 @@
     <title>Bakawi's PICO-8 Games</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <style>
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+
         @media (prefers-color-scheme: dark) {
             body {
                 background-color: black;
@@ -90,23 +96,30 @@
     </style>
 </head>
 <body>
+    Click the title to view the code
     <div class="games-container">
         <div class="game-wrapper">
-            <div class="game-title">Pong</div>
+            <a href="pong.p8" download>
+                <div class="game-title">Pong</div>
+            </a>
             <div class="game-iframe">
                 <iframe src="pages/pong.html" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
         
         <div class="game-wrapper">
-            <div class="game-title">Rhythm Test</div>
+            <a href="beat_game.p8" download>
+                <div class="game-title">Rhythm Test</div>
+            </a>
             <div class="game-iframe">
                 <iframe src="pages/beat_game.html" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
         
         <div class="game-wrapper">
-            <div class="game-title">Shooty Game</div>
+            <a href="shooty_game.p8" download>
+                <div class="game-title">Shooty Game</div>
+            </a>
             <div class="game-iframe">
                 <iframe src="pages/shooty_game.html" frameborder="0" allowfullscreen></iframe>
             </div>
@@ -115,7 +128,9 @@
         <!-- Template -->
         <!--
         <div class="game-wrapper">
-            <div class="game-title">Game Title Here</div>
+            <a href="file.p8" download>
+                <div class="game-title">Title</div>
+            </a>
             <div class="game-iframe">
                 <iframe src="pages/game.html" frameborder="0" allowfullscreen></iframe>
             </div>
