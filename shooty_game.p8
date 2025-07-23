@@ -20,6 +20,12 @@ function _init()
 	iframes=0
 	killcount=0
 
+	typetable = {
+		{hp=1, speed=0.35},
+		{hp=3, speed=0.15},
+		{hp=1, speed=0.55},
+	}
+
 	bullets={}
 	enemies={}
 end
@@ -148,30 +154,76 @@ function movebullets()
 	end
 end
 -->8
+function pickenemytype()
+	local weights = {}
+	local max_type = #typetable
+
+	for i=1,max_type do
+		local base = (max_type - i) * 10
+
+		local scaling = flr(killcount / 10) * i
+
+		weights[i] = base + scaling
+	end
+
+	local total = 0
+	for i=1,max_type do
+		total += weights[i]
+	end
+
+	local roll = rnd(total)
+	local sum = 0
+	for i=1,max_type do
+		sum += weights[i]
+		if roll < sum then return i end
+	end
+end
+
+
 function spawnenemy()
-	add(enemies, {
-		x=rnd({10,118}),
-		y=rnd({10,118}),
-		hp=1,
-	})
+	local type = pickenemytype()
+	local data = typetable[type]
+
+	local enemy = {
+		x = rnd({10, 118}),
+		y = rnd({10, 118}),
+		type = type
+	}
+
+	-- merge in the type-specific data
+	for k,v in pairs(data) do
+		enemy[k] = v
+	end
+
+	add(enemies, enemy)
 end
 
 function moveenemies()
-	local speed = 1/3
 	for e in all(enemies) do
 		local variance = 1/3
 		local dir=atan2(x-e.x,y-e.y) + rnd(variance)-variance/2
-		e.x += speed * cos(dir)
-		e.y += speed * sin(dir)
+		e.x += e.speed * cos(dir)
+		e.y += e.speed * sin(dir)
 	end
 end
 -->8
 function collide(a, b)
-	return a.x < b.x + b.w and
-	       a.x + a.w > b.x and
-	       a.y < b.y + b.h and
-	       a.y + a.h > b.y
+	local a_left   = a.x - a.w / 2
+	local a_right  = a.x + a.w / 2
+	local a_top    = a.y - a.h / 2
+	local a_bottom = a.y + a.h / 2
+
+	local b_left   = b.x - b.w / 2
+	local b_right  = b.x + b.w / 2
+	local b_top    = b.y - b.h / 2
+	local b_bottom = b.y + b.h / 2
+
+	return a_right > b_left and
+	       a_left < b_right and
+	       a_bottom > b_top and
+	       a_top < b_bottom
 end
+
 
 function checkcollisions()
 	--bullet to enemy
@@ -180,6 +232,7 @@ function checkcollisions()
 			if collide({x=b.x,y=b.y,w=2,h=2}, {x=e.x,y=e.y,w=8,h=8}) then
 				del(bullets, b)
 				e.hp -= 1
+				sfx(3)
 				if e.hp <= 0 then
 					killcount += 1
 					sfx(2)
@@ -231,8 +284,15 @@ function drawplayer()
 end
 
 function drawenemies()
+	local colortable = {
+		{},
+		{[8]=12},
+		{[8]=10},
+	}
 	for e in all(enemies) do
+		pal(colortable[e.type])
 		spr(6, e.x-4, e.y-4)
+		pal()
 	end
 end
 
@@ -259,5 +319,6 @@ __gfx__
 00000000007777000077770000777700007777000000000000888800000000000000000000000000000000000000000000000000000000000000000000000000
 __sfx__
 02010000156501565015640156401463012620106200d6100a6100461002610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00020000355503555034550335503254032540315302e5302b53025530215201d5201752013510095100051000500005000050000500005000050000500005000050000500005000050000500005000050000500
+01020000355503555034550335503254032540315302e5302b53025530215201d5201752013510095100051000500005000050000500005000050000500005000050000500005000050000500005000050000500
 000200003c0703c0603c0503c0403c0303c0203c01000700007000070000700007000070000700007000070000700007000070000700007000070000700007000070000700007000070000700007000070000700
+000100001d7501d7501c7501b7501a7401a7401973016730137300d73009720057200b70007700097000070000700007000070000700007000070000700007000070000700007000070000700007000070000700
