@@ -185,6 +185,7 @@ function checkcollisions()
 					sfx(2)
 					del(enemies, e)
 				end
+				break
 			end
 		end
 	end
