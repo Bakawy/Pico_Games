@@ -55,7 +55,7 @@ function _update60()
     end
     
     -- Smooth beat progress (time-based)
-    smooth_beat = (time() - basetime - input_offset) / beatlength
+    smooth_beat = (get_time()) / beatlength
     
     -- Game systems
     if calibrating then
@@ -74,7 +74,9 @@ end
 
 function _draw()
     cls()
-    print("offset: "..flr(input_offset*1000).."ms")
+	print("press ⬆️ and ⬇️ to change tempo")
+	print("press 🅾️ to the beat")
+ print("offset: "..flr(input_offset*1000).."ms")
 	print("beat: "..smooth_beat)
 	print("bpm: "..bpm)
     
@@ -86,7 +88,7 @@ function _draw()
 end
 
 -->8
--- Audio System
+-- audio system
 function setsfxspeed(id, speed)
     local sfx_base = 0x3200
     local sfx_size = 68
@@ -107,14 +109,14 @@ function setspd(spd)
 end
 
 -->8
--- Game Logic
+-- game logic
 function checktiming()
     local current_beat = smooth_beat
     
     for input in all(expected_inputs) do
         if abs(current_beat - input.beat) <= 1 then
             local beat_time = input.beat * beatlength
-            local current_time = time() - input_offset
+            local current_time = get_time()
             
             if btnp(input.button) then
                 local time_diff = abs(current_time - beat_time)
@@ -123,17 +125,22 @@ function checktiming()
                     timing = 2 -- Perfect
                     sfx(4)
                     del(expected_inputs, input)
+					break
                 elseif time_diff <= 0.15 then
                     timing = 1 -- Good
                     sfx(4)
                     del(expected_inputs, input)
+					break
                 else
+					sfx(5)
                     timing = 0 -- Bad
+					break
                 end
             end
             
             if current_time > beat_time + 0.15 then
                 timing = 0 -- Miss
+				sfx(5)
                 del(expected_inputs, input)
             end
         end
@@ -147,19 +154,32 @@ function initgame()
 	music(0)
 	song=0
 	basetime=time()
-
+	for i=0,3 do
+        add(scheduled_sfx, {beat=i, id=3})
+    end
 	expected_inputs = {
-        {beat=4, button=❎},
-        {beat=6, button=🅾️},
+        {beat=4, button=🅾️},
+		{beat=5, button=🅾️},
+		{beat=6, button=🅾️},
+		{beat=7, button=🅾️},
+		{beat=8, button=🅾️},
+		{beat=9, button=🅾️},
+		{beat=10, button=🅾️},
+		{beat=11, button=🅾️},
+		{beat=12, button=🅾️},
     }
 	
 end
+
+function get_time()
+	return time() - basetime - input_offset
+end 
 -->8
--- Calibration System
+-- calibration system
 function handle_calibration()
     local target_beat = calib_target_beats[1]
     local target_time = target_beat * beatlength
-    local current_time = time() - basetime - input_offset
+    local current_time = get_time()
     
     if btnp(❎) or btnp(🅾️) then
         local offset = current_time - target_time
@@ -186,13 +206,13 @@ function draw_calibration()
     for i=1, #calib_target_beats do
 		local target_beat = calib_target_beats[i]
 		local target_time = target_beat * beatlength
-		local t = target_time - (time() - basetime - input_offset)
+		local t = target_time - (get_time())
 		local travel_time = 2.0
 		
 		if t >= -1 and t <= travel_time then
 			local progress = 1 - (t / travel_time)
 			local start = 128 * (bpm/100)
-			local x =start - progress * (start - target_x)
+			local x = start - progress * (start - target_x)
 			local size = 2 + (8 * (pulse/maxpulse))
 			circfill(x, 64, size, 7)
 		end
@@ -200,7 +220,7 @@ function draw_calibration()
 end
 
 -->8
--- Visual Effects
+-- visual effects
 function draw_game()
     -- Pulse effect (smooth size interpolation)
     local pulse_size = 7 + 21 * pulse/maxpulse
@@ -210,9 +230,10 @@ function draw_game()
     for input in all(expected_inputs) do
         local beats_away = input.beat - smooth_beat
         if beats_away > 0 and beats_away < 8 then
-            local x = ease_out_quad(1 - (beats_away/8)) * 100 + 28
+            local r = ease_out_quad((beats_away/8)) * 100 + 28
             local col = input.button == ❎ and 12 or 10
-            circfill(x, 64, 5, col)
+			print(beats_away, 64, 64 - (64 * beats_away/8))
+            circ(64, 64, r, col)
         end
     end
 end
@@ -221,8 +242,12 @@ function ease_out_quad(x)
     return 1 - (1 - x) * (1 - x)
 end
 
+function ease_in_quad(x)
+    return x * x
+end
+
 -->8
--- Audio Scheduling
+-- audio scheduling
 function check_scheduled_sfx()
     local pattern, row = 0, stat(21)
     for s in all(scheduled_sfx) do
