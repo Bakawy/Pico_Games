@@ -1,13 +1,12 @@
 pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
-
+  
 function _init()
     poke(0x5f5c, 255) -- disable auto-repeat
     poke(0x5f5d, 255)
     cls(0)
-    music(0)
-    
+
     -- Timing system
     spd = 18
     bpm = 1800/spd
@@ -16,6 +15,11 @@ function _init()
     pulse = 360
     last_row = -1
     timing = -1 -- 2=good, 1=ok, 0=bad, -1=nothing
+	basetime = 0
+	song = 1
+
+	setspd(spd)
+	music(song)
     
     -- Smooth interpolation tracking
     smooth_beat = 0
@@ -28,10 +32,6 @@ function _init()
     input_offset = 0
     
     -- Game elements
-    expected_inputs = {
-        {beat=4, button=❎},
-        {beat=6, button=🅾️},
-    }
     
     scheduled_sfx = {}
     for i=4,15 do
@@ -41,8 +41,8 @@ end
 
 function _update60()
     -- Tempo control
-    if btnp(⬆️) then spd = max(1, spd-1); setspd(spd) end
-    if btnp(⬇️) then spd += 1; setspd(spd) end
+    if btnp(⬆️) then spd = max(1, spd-1); setspd(spd); basetime=time() end
+    if btnp(⬇️) then spd += 1; setspd(spd); basetime=time() end
     
     -- Core timing (row-based)
     local row = stat(21)
@@ -55,7 +55,7 @@ function _update60()
     end
     
     -- Smooth beat progress (time-based)
-    smooth_beat = (time() - input_offset) / beatlength
+    smooth_beat = (time() - basetime - input_offset) / beatlength
     
     -- Game systems
     if calibrating then
@@ -74,7 +74,9 @@ end
 
 function _draw()
     cls()
-    print("offset: "..flr(input_offset*1000).."ms", 0, 0, 7)
+    print("offset: "..flr(input_offset*1000).."ms")
+	print("beat: "..smooth_beat)
+	print("bpm: "..bpm)
     
     if calibrating then
         draw_calibration()
@@ -95,11 +97,13 @@ end
 
 function setspd(spd)
     music(-1)
-    setsfxspeed(0, spd)
-    setsfxspeed(2, spd)
+	local songs = {0, 2, 6, 7, 8, 9}
+	for s in all(songs) do
+    	setsfxspeed(s, spd)
+	end
     bpm = 1800/spd
     beatlength = 60/bpm
-    music(0, 0, true)
+    music(song, 0, true)
 end
 
 -->8
@@ -138,12 +142,24 @@ function checktiming()
     return timing
 end
 
+function initgame()
+	music(-1)
+	music(0)
+	song=0
+	basetime=time()
+
+	expected_inputs = {
+        {beat=4, button=❎},
+        {beat=6, button=🅾️},
+    }
+	
+end
 -->8
 -- Calibration System
 function handle_calibration()
     local target_beat = calib_target_beats[1]
     local target_time = target_beat * beatlength
-    local current_time = time() - input_offset
+    local current_time = time() - basetime - input_offset
     
     if btnp(❎) or btnp(🅾️) then
         local offset = current_time - target_time
@@ -154,6 +170,7 @@ function handle_calibration()
 	
     if #calib_target_beats == 0 then
         calibrating = false
+		initgame()
     end
 end
 
@@ -169,12 +186,13 @@ function draw_calibration()
     for i=1, #calib_target_beats do
 		local target_beat = calib_target_beats[i]
 		local target_time = target_beat * beatlength
-		local t = target_time - (time() - input_offset)
+		local t = target_time - (time() - basetime - input_offset)
 		local travel_time = 2.0
 		
 		if t >= -1 and t <= travel_time then
 			local progress = 1 - (t / travel_time)
-			local x = 128 - progress * (128 - target_x)
+			local start = 128 * (bpm/100)
+			local x =start - progress * (start - target_x)
 			local size = 2 + (8 * (pulse/maxpulse))
 			circfill(x, 64, size, 7)
 		end
@@ -224,7 +242,6 @@ __gfx__
 00700700700000070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000777777770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000777777770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-
 __sfx__
 911200000b633006003c6000b63330615006050b6330b6000b6000b6000b6333060030615006000b600306000b633006003c6000b63330615006050b633306000b600306000b6333060030615000003060000000
 010f0000070500705013050130501205012000100501005010050100500e0500e0500c0500c0500e0500e0500b0500b05013050130501205012000100501005010050100500b0500b05009050090500b0500b050
@@ -232,8 +249,13 @@ __sfx__
 000400003c11015100001001710017100121001210000100101001010000100001000010010100101000010012100121000010013100131000e1000e100001000c1000c100001000010000100001000010000100
 00030000145500f5400c5400853003520015100051000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500005000050000500
 01010000077500b7500f750157501a7501e750207502575027750287502a7502c7502d7502d7502e7002e7002d7002b7002a7002a7002a7002a7002a7002b7002b70000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-
+9112000030615306153c600306153061500600306150b60030615000000000000000306150000000000000000b6230000030615000000b6230000030615000000b6230000030615000000b623000003061500000
+911200000b6230000030615000000b6230000030615000000b6230000030615000000b6230000030615000000b6230000030615000000b6230000030615000000b6230000030615000000b623000003061500000
+011200000000000000000000000000000000000000000000000000000002770000000477000000057700000007770077700c7700777000770007700c7700077009770097700c7700977000770007700c77000770
+0112000007770077700c7700777000770007700c7700077009770097700c7700977000770007700c7700077007770077700c7700777000770007700c7700077009770097700c7700977000770007700c77000770
+011200001800018000180001f0001f000000001f000000001e00000000000001f000000001a0001c0001e0001f0001f0001d0001d0001c0001c0001a000180000000013000000000c00000000000000000000000
 __music__
 02 00024344
+00 06084344
+03 07094b44
+
