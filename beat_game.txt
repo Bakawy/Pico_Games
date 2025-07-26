@@ -189,7 +189,7 @@ end
 
 function checkbeat(beat, useoffset)
     if useoffset == nil then useoffset = true end
-    return abs(get_time(useoffset) - (beat * beatlength)) < 1/60 or (get_time(false)) / beatlength >= beat
+    return abs(get_time(useoffset) - (beat * beatlength)) < 1/60 or smooth_beat >= beat
 end
 -->8
 -- calibration system
@@ -267,6 +267,7 @@ end
 -->8
 -- audio scheduling
 function check_scheduled_sfx()
+    local row = stat(50)
     for s in all(scheduled_sfx) do
         if checkbeat(s.beat, false) and not music_change then
             sfx(s.id)
