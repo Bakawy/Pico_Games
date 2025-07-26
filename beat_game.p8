@@ -15,8 +15,9 @@ function _init()
     pulse = 360
     last_row = -1
     timing = -1 -- 2=good, 1=ok, 0=bad, -1=nothing
-	basetime = 0
 	song = 1
+    music_change=false
+    
 
 	setspd(spd)
 	music(song)
@@ -41,11 +42,11 @@ end
 
 function _update60()
     -- Tempo control
-    if btnp(⬆️) then spd = max(1, spd-1); setspd(spd); basetime=time() end
-    if btnp(⬇️) then spd += 1; setspd(spd); basetime=time() end
+    if btnp(⬆️) then spd = max(1, spd-1); setspd(spd); end
+    if btnp(⬇️) then spd += 1; setspd(spd); end
     
     -- Core timing (row-based)
-    local row = stat(21)
+    local row = stat(50)
     if row != last_row then
         if row % 4 == 0 then
             pulse = maxpulse
@@ -56,6 +57,7 @@ function _update60()
     
     -- Smooth beat progress (time-based)
     smooth_beat = (get_time()) / beatlength
+    music_change=false
     
     -- Game systems
     if calibrating then
@@ -76,9 +78,12 @@ function _draw()
     cls()
 	print("press ⬆️ and ⬇️ to change tempo")
 	print("press 🅾️ to the beat")
- print("offset: "..flr(input_offset*1000).."ms")
+    print("offset: "..flr(input_offset*1000).."ms")
 	print("beat: "..smooth_beat)
 	print("bpm: "..bpm)
+    for s in all(scheduled_sfx) do
+        print(s.beat)
+    end
     
     if calibrating then
         draw_calibration()
@@ -106,6 +111,7 @@ function setspd(spd)
     bpm = 1800/spd
     beatlength = 60/bpm
     music(song, 0, true)
+    music_change=true
 end
 
 -->8
@@ -123,17 +129,16 @@ function checktiming()
                 
                 if time_diff <= 0.07 then -- ~1/4 note at 120bpm
                     timing = 2 -- Perfect
-                    sfx(4)
                     del(expected_inputs, input)
 					break
                 elseif time_diff <= 0.15 then
                     timing = 1 -- Good
-                    sfx(4)
                     del(expected_inputs, input)
 					break
                 else
 					sfx(5)
                     timing = 0 -- Bad
+                    del(expected_inputs, input)
 					break
                 end
             end
@@ -152,28 +157,40 @@ end
 function initgame()
 	music(-1)
 	music(0)
+    music_change=true
 	song=0
-	basetime=time()
-	for i=0,3 do
+	for i=4,7 do
         add(scheduled_sfx, {beat=i, id=3})
     end
 	expected_inputs = {
-        {beat=4, button=🅾️},
-		{beat=5, button=🅾️},
-		{beat=6, button=🅾️},
-		{beat=7, button=🅾️},
 		{beat=8, button=🅾️},
 		{beat=9, button=🅾️},
 		{beat=10, button=🅾️},
 		{beat=11, button=🅾️},
 		{beat=12, button=🅾️},
+        {beat=13, button=🅾️},
+		{beat=14, button=🅾️},
+		{beat=15, button=🅾️},
+		{beat=16, button=🅾️},
+		{beat=17, button=🅾️},
     }
-	
+    for i in all(expected_inputs) do
+        add(scheduled_sfx, {beat=i.beat,id=4})
+    end
 end
 
-function get_time()
-	return time() - basetime - input_offset
+function get_time(useoffset)
+    useoffset = useoffset and useoffset or true
+    if music_change then
+        return 0
+    end
+	return ((stat(56) * (bpm/100) / 72) + stat(55) * 8) * beatlength - (useoffset and 0 or input_offset)
 end 
+
+function checkbeat(beat, useoffset)
+    useoffset = useoffset and useoffset or true
+    return abs(get_time(useoffset) - (beat * beatlength)) < 1/60 or smooth_beat >= beat
+end
 -->8
 -- calibration system
 function handle_calibration()
@@ -249,9 +266,9 @@ end
 -->8
 -- audio scheduling
 function check_scheduled_sfx()
-    local pattern, row = 0, stat(21)
+    local row = stat(50)
     for s in all(scheduled_sfx) do
-        if pattern == 0 and row == (s.beat * 4) % 64 then
+        if checkbeat(s.beat, false) and not music_change then
             sfx(s.id)
             del(scheduled_sfx, s)
         end
