@@ -14,7 +14,7 @@ function _init()
     O=4
     X=5
 
-    -- Timing system
+    -- timing system
     spd = 18
     bpm = 1800/spd
     beatlength = 60/bpm
@@ -145,7 +145,9 @@ function checktiming()
             button_color_states[input.button] = 100
             input.showed = true
         end
-
+        sort(expected_inputs, function(a, b)
+            return a.beat < b.beat
+        end)
         if not input.checked and abs(current_beat - input.beat) <= 4 then
             local beat_time = input.beat * beatlength
             local current_time = get_time()
@@ -153,7 +155,7 @@ function checktiming()
             if btnp(input.button) then
                 local time_diff = abs(current_time - beat_time)
                 add(temptext, {words=time_diff, x=32, y=96, len=30})
-                if time_diff <= buffer/2 then -- ~1/4 note at 120bpm
+                if time_diff <= buffer * (2/3) then -- ~1/4 note at 120bpm
                     timing = 2 -- Perfect
                     input.checked = true
                     score += timing
@@ -177,7 +179,9 @@ function checktiming()
 				sfx(5)
                 lives -= 1
                 input.checked = true
+                break
             end
+            
         end
     end
     
@@ -210,10 +214,23 @@ function initgame()
         [5]=0,--X
     }
     local inputs = {0, 1, 2, 3, 4, 5}
-    for i=1,4 do
-        local input = rnd(inputs)
-        del(inputs, input)
-        playinput(input, 3+i)
+    if score > 50 then
+        local rhythm = {1, 1, 0, 0,}
+        shuffle(rhythm)
+        for i=1, #rhythm do
+            if rhythm[i] == 1 then
+                local input = rnd(inputs)
+                del(inputs, input)
+                playinput(input, 4 + (i - 1)/2)
+                playinput(input, 6 + (i - 1)/2)
+            end
+        end
+    else 
+        for i=1,4 do
+            local input = rnd(inputs)
+            del(inputs, input)
+            playinput(input, 3+i)
+        end
     end
     for i in all(expected_inputs) do
         break
@@ -380,6 +397,28 @@ end
 function ease_in_quad(x)
     return x * x
 end
+
+function randint(min, max)
+    return flr(rnd(max - min + 1)) + min
+end
+
+function sort(a, cmp)
+  for i = 2, #a do
+    local j = i
+    while j > 1 and cmp(a[j], a[j-1]) do
+      a[j], a[j-1] = a[j-1], a[j]
+      j -= 1
+    end
+  end
+end
+
+function shuffle(t)
+  for i = #t, 2, -1 do
+    local j = flr(rnd(i)) + 1  -- j ranges from 1 to i
+    t[i], t[j] = t[j], t[i]
+  end
+end
+
 
 function drawtext()
     for text in all(temptext) do
