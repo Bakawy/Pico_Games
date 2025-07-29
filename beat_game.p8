@@ -15,7 +15,7 @@ function _init()
     X=5
 
     -- Timing system
-    spd = 15
+    spd = 18
     bpm = 1800/spd
     beatlength = 60/bpm
     maxpulse = 360
@@ -24,6 +24,9 @@ function _init()
     timing = -1 -- 2=good, 1=ok, 0=bad, -1=nothing
 	song = 0
     music_change=false
+
+    score=0
+    lives=4
     
 
 	setspd(spd)
@@ -40,7 +43,7 @@ function _init()
     input_offset = 0
     
     -- Game elements
-    
+    temptext={}
     scheduled_sfx = {}
     for i=4,15 do
         add(scheduled_sfx, {beat=i, id=3})
@@ -83,15 +86,15 @@ end
 
 function _draw()
     cls()
-	print("press ⬆️ and ⬇️ to change tempo")
-	print("press 🅾️ to the beat")
     print("offset: "..flr(input_offset*1000).."ms")
-	print("beat: "..smooth_beat)
-	print("bpm: "..bpm)
+	--print("beat: "..smooth_beat)
+    print("bpm: "..bpm)
+	print("score: "..score)
+    print("lives: "..lives)
     for k,v in pairs(button_color_states) do
         print(k..": "..v)
     end
-    
+    drawtext()
     if calibrating then
         draw_calibration()
     else
@@ -125,11 +128,16 @@ end
 -- game logic
 function checktiming()
     local current_beat = smooth_beat
+    local buffer = 0.3
     for button, state in pairs(button_color_states) do
         if state > 0 then
             state -= 5
         end
         button_color_states[button]=state
+    end
+
+    if checkbeat(24, true) then
+        initgame()
     end
 
     for input in all(expected_inputs) do
@@ -138,41 +146,54 @@ function checktiming()
             input.showed = true
         end
 
-        if not input.checked and abs(current_beat - input.beat) <= 1 then
+        if not input.checked and abs(current_beat - input.beat) <= 4 then
             local beat_time = input.beat * beatlength
             local current_time = get_time()
 
             if btnp(input.button) then
                 local time_diff = abs(current_time - beat_time)
-                
-                if time_diff <= 0.07 then -- ~1/4 note at 120bpm
+                add(temptext, {words=time_diff, x=32, y=96, len=30})
+                if time_diff <= buffer/2 then -- ~1/4 note at 120bpm
                     timing = 2 -- Perfect
                     input.checked = true
+                    score += timing
 					break
-                elseif time_diff <= 0.15 then
+                elseif time_diff <= buffer then
                     timing = 1 -- Good
                     input.checked = true
+                    score += timing
 					break
                 else
 					sfx(5)
                     timing = 0 -- Bad
+                    lives -= 1
                     input.checked = true
 					break
                 end
             end
             
-            if current_time > beat_time + 0.15 then
+            if current_time > beat_time + buffer then
                 timing = 0 -- Miss
 				sfx(5)
+                lives -= 1
                 input.checked = true
             end
         end
     end
     
+    if lives <= 0 then
+        cls()
+        stop("you lose! score: "..score, 0, 0, 1)
+    end
+
     return timing
 end
 
 function initgame()
+    if score > 0 then
+        spd -= 1
+        setspd(spd)
+    end
 	music(-1)
 	music(1)
     scheduled_sfx = {}
@@ -188,10 +209,12 @@ function initgame()
         [4]=0,--O
         [5]=0,--X
     }
-    playinput(U, 4)
-    playinput(D, 5)
-    playinput(L, 6)
-    playinput(R, 7)
+    local inputs = {0, 1, 2, 3, 4, 5}
+    for i=1,4 do
+        local input = rnd(inputs)
+        del(inputs, input)
+        playinput(input, 3+i)
+    end
     for i in all(expected_inputs) do
         break
         add(scheduled_sfx, {beat=i.beat,id=4})
@@ -358,6 +381,15 @@ function ease_in_quad(x)
     return x * x
 end
 
+function drawtext()
+    for text in all(temptext) do
+        print(text.words, text.x, text.y)
+        text.len -= 1
+        if text.len <= 0 then
+            del(temptext, text)
+        end
+    end
+end
 -->8
 -- audio scheduling
 function check_scheduled_sfx()
