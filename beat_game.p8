@@ -27,7 +27,9 @@ function _init()
 
     score=0
     lives=4
-    
+    average_spd = spd
+    spd_range = 3
+    gamestate = 0 -- 0 calibration | 1 game | 2 lose
 
 	setspd(spd)
 	music(song)
@@ -70,10 +72,12 @@ function _update60()
     music_change=false
     
     -- Game systems
-    if calibrating then
+    if gamestate == 0 then
         handle_calibration()
-    else 
+    elseif gamestate == 1 then
         timing = checktiming()
+    elseif gamestate == 2 then
+        lose_menu()
     end
     
     if pulse > 0 then
@@ -95,10 +99,12 @@ function _draw()
         print(k..": "..v)
     end
     drawtext()
-    if calibrating then
+    if gamestate == 0 then
         draw_calibration()
-    else
+    elseif gamestate == 1 then
         draw_game()
+    elseif gamestate == 2 then
+        draw_menu()
     end
 end
 
@@ -186,16 +192,18 @@ function checktiming()
     end
     
     if lives <= 0 then
-        cls()
-        stop("you lose! score: "..score, 0, 0, 1)
+        initlose()
     end
 
     return timing
 end
 
 function initgame()
+    gamestate = 1
+    average_spd = spd
     if score > 0 then
-        spd -= 1
+        average_spd -= 0.5
+        spd = randint(flr(average_spd - spd_range/2), ceil(average_spd + spd_range/2))
         setspd(spd)
     end
 	music(-1)
@@ -214,7 +222,18 @@ function initgame()
         [5]=0,--X
     }
     local inputs = {0, 1, 2, 3, 4, 5}
-    if score > 50 then
+    if score > 150 then
+        local rhythm = {1, 1, 1, 0,}
+        shuffle(rhythm)
+        for i=1, #rhythm do
+            if rhythm[i] == 1 then
+                local input = rnd(inputs)
+                del(inputs, input)
+                playinput(input, 4 + (i - 1)/2)
+                playinput(input, 6 + (i - 1)/2)
+            end
+        end
+    elseif score > 100 then
         local rhythm = {1, 1, 0, 0,}
         shuffle(rhythm)
         for i=1, #rhythm do
@@ -225,11 +244,18 @@ function initgame()
                 playinput(input, 6 + (i - 1)/2)
             end
         end
-    else 
+    elseif score > 50 then
         for i=1,4 do
             local input = rnd(inputs)
             del(inputs, input)
             playinput(input, 3+i)
+        end
+    else
+        for i=1,2 do
+            local input = rnd(inputs)
+            del(inputs, input)
+            playinput(input, 3+i)
+            playinput(input, 5+i)
         end
     end
     for i in all(expected_inputs) do
@@ -273,6 +299,38 @@ function playinput(button, beat)
 end
 
 -->8
+-- game menu
+function initlose()
+    gamestate = 2
+    music(-1)
+    menu_items = {"start game", "options"}
+    menu_text = {"you lose :(", "score: "..score}
+    selected = 1
+end
+
+function lose_menu()
+    
+    if btnp(2) then -- up
+        selected -= 1
+    elseif btnp(3) then -- down
+        selected += 1
+    end
+
+    if selected < 1 then selected = #menu_items end
+    if selected > #menu_items then selected = 1 end
+
+    if btnp(4) or btnp(5) then
+        if menu_items[selected] == "start game" then
+            lives = 4
+            spd = 18
+            initgame()
+        elseif menu_items[selected] == "options (WIP)" then
+            printh("options menu")
+        end
+    end
+end
+
+-->8
 -- calibration system
 function handle_calibration()
     local target_beat = calib_target_beats[1]
@@ -287,7 +345,7 @@ function handle_calibration()
     end
 	
     if #calib_target_beats == 0 then
-        calibrating = false
+        gamestate = 1
 		initgame()
     end
 end
@@ -390,6 +448,35 @@ function drawInputs()
     pal()
 end
 
+function draw_menu()
+    cls()
+    print("main menu", 44, 20, 7)
+    
+    for i, item in ipairs(menu_text) do
+        print(item, 0, i * 10)
+    end
+
+    for i, item in ipairs(menu_items) do
+        local y = 40 + i * 10
+        if i == selected then
+            print("> "..item, 36, y, 11)
+        else
+            print(item, 44, y, 6)
+        end
+    end
+end
+
+function drawtext()
+    for text in all(temptext) do
+        print(text.words, text.x, text.y)
+        text.len -= 1
+        if text.len <= 0 then
+            del(temptext, text)
+        end
+    end
+end
+-->8
+-- helper functions
 function ease_out_quad(x)
     return 1 - (1 - x) * (1 - x)
 end
@@ -417,17 +504,6 @@ function shuffle(t)
     local j = flr(rnd(i)) + 1  -- j ranges from 1 to i
     t[i], t[j] = t[j], t[i]
   end
-end
-
-
-function drawtext()
-    for text in all(temptext) do
-        print(text.words, text.x, text.y)
-        text.len -= 1
-        if text.len <= 0 then
-            del(temptext, text)
-        end
-    end
 end
 -->8
 -- audio scheduling
