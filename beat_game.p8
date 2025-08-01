@@ -27,6 +27,7 @@ function _init()
 
 
     score=0
+    highscore=0
     playerx=32
     player_velocity=0
     lives=4
@@ -139,7 +140,7 @@ end
 function checktiming()
     local current_beat = smooth_beat
     local buffer = 0.3
-    local player_speed = 2
+    local player_speed = 3
     for button, state in pairs(button_color_states) do
         if state > 0 then
             state -= 5
@@ -201,7 +202,7 @@ function checktiming()
     if lives <= 0 then
         initlose()
     end
-    player_velocity = max(0, player_velocity - 0.1)
+    player_velocity = max(0, player_velocity - 0.2)
     playerx += player_velocity
     return timing
 end
@@ -313,10 +314,11 @@ function initlose()
     camera()
     gamestate = 2
     music(-1)
+    highscore = max(highscore, score)
     menu_items = {"start game", "change color"}
-    menu_text = {"you lose :(", "score: "..score}
+    menu_text = {"you lose :(", "score: "..score, "highscore: "..highscore}
     selected = 1
-    disableinput = 10
+    disableinput = 30
 end
 
 function lose_menu()
@@ -403,7 +405,7 @@ function draw_game()
     camera(camerax, 0)
     add(temptext, {words="score: "..score, x=0, y=0, len=1})
     add(temptext, {words="lives: "..lives, x=0, y=6, len=1})
-    add(temptext, {words="bpm: "..bpm, x=0, y=12, len=1})
+    add(temptext, {words="bpm: "..flr(bpm), x=0, y=12, len=1})
     if showcircs then
         local beat = (get_time(false)) / beatlength
         local pulse_size = 7 + 21 * pulse/maxpulse
