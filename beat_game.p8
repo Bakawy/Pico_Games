@@ -403,7 +403,7 @@ function draw_game()
     camera(camerax, 0)
     add(temptext, {words="score: "..score, x=0, y=0, len=1})
     add(temptext, {words="lives: "..lives, x=0, y=6, len=1})
-    add(temptext, {words="bpm: "..average_spd, x=0, y=12, len=1})
+    add(temptext, {words="bpm: "..bpm, x=0, y=12, len=1})
     if showcircs then
         local beat = (get_time(false)) / beatlength
         local pulse_size = 7 + 21 * pulse/maxpulse
