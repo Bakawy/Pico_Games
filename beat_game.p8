@@ -212,8 +212,8 @@ function initgame()
     if score > 0 then
         average_spd -= 0.75
         spd = randint(flr(average_spd - spd_range/2), ceil(average_spd + spd_range/2))
-        setspd(spd)
     end
+    setspd(spd)
 	music(-1)
 	music(1)
     scheduled_sfx = {}
@@ -336,7 +336,6 @@ function lose_menu()
             spd = 18
             score = 0
             playerx=0
-            average_spd=18
             initgame()
         elseif menu_items[selected] == "change color" then
             playercol += 1
@@ -404,6 +403,7 @@ function draw_game()
     camera(camerax, 0)
     add(temptext, {words="score: "..score, x=0, y=0, len=1})
     add(temptext, {words="lives: "..lives, x=0, y=6, len=1})
+    add(temptext, {words="bpm: "..average_spd, x=0, y=12, len=1})
     if showcircs then
         local beat = (get_time(false)) / beatlength
         local pulse_size = 7 + 21 * pulse/maxpulse
