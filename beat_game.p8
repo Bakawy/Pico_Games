@@ -139,7 +139,7 @@ end
 -- game logic
 function checktiming()
     local current_beat = smooth_beat
-    local buffer = 0.3
+    local buffer = 0.25
     local player_speed = 3
     for button, state in pairs(button_color_states) do
         if state > 0 then
@@ -152,14 +152,14 @@ function checktiming()
         initgame()
     end
 
+    sort(expected_inputs, function(a, b)
+            return abs(a.beat - current_beat) < abs(b.beat - current_beat)
+        end)
     for input in all(expected_inputs) do
         if checkbeat(input.beat, false) and not input.showed then
             button_color_states[input.button] = 100
             input.showed = true
         end
-        sort(expected_inputs, function(a, b)
-            return a.beat < b.beat
-        end)
         if not input.checked and abs(current_beat - input.beat) <= 4 then
             local beat_time = input.beat * beatlength
             local current_time = get_time()
@@ -190,7 +190,7 @@ function checktiming()
             
             if current_time > beat_time + buffer then
                 timing = 0 -- Miss
-				sfx(5)
+				sfx(4)
                 lives -= 1
                 input.checked = true
                 break
@@ -211,7 +211,7 @@ function initgame()
     gamestate = 1
     average_spd = spd
     if score > 0 then
-        average_spd -= 0.75
+        average_spd -= 0.5
         spd = randint(flr(average_spd - spd_range/2), ceil(average_spd + spd_range/2))
     end
     setspd(spd)
@@ -232,7 +232,27 @@ function initgame()
     }
     local inputs = {0, 1, 2, 3, 4, 5}
     local level = flr(score/75)
-    if level >= 3 then
+    if level >= 5 or true then
+        local rhythm = {1, 1, 1, 1, 1, 1, 0, 0}
+        shuffle(rhythm)
+        for i=1, #rhythm do
+            if rhythm[i] == 1 then
+                local input = rnd(inputs)
+                del(inputs, input)
+                playinput(input, 4 + (i - 1)/2)
+            end
+        end
+    elseif level >= 4 then
+        local rhythm = {1, 1, 1, 1, 0, 0, 0, 0}
+        shuffle(rhythm)
+        for i=1, #rhythm do
+            if rhythm[i] == 1 then
+                local input = rnd(inputs)
+                del(inputs, input)
+                playinput(input, 4 + (i - 1)/2)
+            end
+        end
+    elseif level >= 3 then
         local rhythm = {1, 1, 1, 0,}
         shuffle(rhythm)
         for i=1, #rhythm do
