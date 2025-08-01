@@ -209,7 +209,6 @@ end
 
 function initgame()
     gamestate = 1
-    average_spd = spd
     if score > 0 then
         average_spd -= 0.5
         spd = randint(flr(average_spd - spd_range/2), ceil(average_spd + spd_range/2))
@@ -356,6 +355,7 @@ function lose_menu()
         if menu_items[selected] == "start game" then
             lives = 4
             spd = 18
+            average_spd = spd
             score = 0
             playerx=0
             initgame()
