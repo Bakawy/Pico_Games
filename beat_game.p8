@@ -232,7 +232,7 @@ function initgame()
     }
     local inputs = {0, 1, 2, 3, 4, 5}
     local level = flr(score/75)
-    if level >= 5 or true then
+    if level >= 5 then
         local rhythm = {1, 1, 1, 1, 1, 1, 0, 0}
         shuffle(rhythm)
         for i=1, #rhythm do
