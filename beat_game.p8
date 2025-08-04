@@ -216,7 +216,6 @@ function initgame()
     setspd(spd)
 	music(-1)
 	music(1)
-    scheduled_sfx = {}
     music_change=true
 	song=0
 	expected_inputs = {
