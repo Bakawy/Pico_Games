@@ -21,6 +21,7 @@ function _init()
 end
 
 function _update60()
+	cls()
 	if game_state == 0 then
 		update_menu()
 	elseif game_state == 1 then
@@ -30,7 +31,6 @@ function _update60()
 end
 
 function _draw()
-	cls()
 	if game_state == 0 then
 		draw_menu()
 	elseif game_state == 1 then
@@ -88,10 +88,15 @@ function move_player()
 			spawn_thrown_tile(player.grabbing, player.x, player.y - 8, 1, 0.75)
 			player.grabbing = -1
 			player.y_velocity = - jump_strength
+			if player.grappling then
+				player.grappling = false
+				player.hook = nil
+			end
 		elseif btn(U) and player.grabbing != -1 then
 			if player.grabbing == 18 then
 				if not player.hook then
 					fire_grapple()
+					player.grabbing = 16
 				else
 					player.grappling = false
 					player.hook = nil
@@ -117,21 +122,7 @@ function move_player()
 		end
 	end
 
-	if player.grappling and player.hook and player.hook.attached then
-		local dx = player.hook.x - player.x
-		local dy = player.hook.y - player.y
-		local dist = sqrt(dx*dx + dy*dy)
-
-		if dist > 2 then
-			local pull_strength = 1
-			player.x_velocity += dx / dist * pull_strength
-			player.y_velocity += dy / dist * pull_strength
-		else
-			player.grappling = false
-			player.hook = nil
-		end
-	end
-
+	apply_grapple_force()
 
 	player.y_velocity += gravity
 
@@ -177,6 +168,40 @@ function move_player()
 	end
 end
 
+function apply_grapple_force()
+	if not player.grappling or not player.hook or not player.hook.attached then return end
+
+	local dx = player.x - player.hook.x
+	local dy = player.y - player.hook.y
+	local dist = sqrt(dx*dx + dy*dy)
+	local rest_len = 40
+
+	if dist > rest_len then
+		local stretch = dist - rest_len
+		local nx = dx / dist
+		local ny = dy / dist
+
+		local tension = 0.05 
+
+		local angle = atan2(dy, dx)
+		local swing_force = gravity * sin(angle) 
+		--print(swing_force, 64, 64, 7)
+		--line(64, 64, 64 + swing_force * 30, 64, 2)
+		
+		local fx = -tension * stretch * nx - swing_force
+		local fy = -tension * stretch * ny
+		local max_velocity = 5
+		fx = min(fx, max_velocity)
+		fy = min(fy, max_velocity)
+
+		player.x_velocity += fx
+		player.y_velocity += fy
+	end
+end
+
+
+
+
 function draw_player()
 	local x = player.x
 	local y = player.y
@@ -186,7 +211,7 @@ function draw_player()
 	end
 
 	if player.grappling and player.hook then
-		line(player.x, player.y, player.hook.x, player.hook.y, 7)
+		line(player.x, player.y - 8, player.hook.x, player.hook.y, 7)
 	end
 end
 
@@ -273,21 +298,31 @@ function move_tiles()
 end
 
 function explode(x, y, radius)
+	local explosion_strength = 10
+	local dist_from_player = dist(x, y, player.x, player.y)
 	for tile in all(get_tiles_in_radius(x, y, radius)) do
 		local cx, cy = tile.x * 8 + 4, tile.y * 8 + 4
 		if check_tile_stat(cx, cy, 0) and not check_tile_stat(cx, cy, 2) then
 			mset(tile.x, tile.y, 0)
+
 			if tile.id == 17 then
 				explode(cx, cy, radius)
+			else
+				local explosion_distance = dist(x, y, cx, cy)
+				if explosion_distance > radius/2 then 
+					local magnitude = ((radius - explosion_distance)/radius) * explosion_strength
+					magnitude = mid(explosion_strength/2, magnitude, explosion_strength)
+					local direction = atan2(cx - x, -abs(cy - y))
+					spawn_thrown_tile(tile.id, cx, cy, magnitude, direction)
+				end
 			end
 		end
 	end
-	local dist_from_player = dist(x, y, player.x, player.y)
-	local explosion_strength = 10
+
 	if dist_from_player < radius then
 		local magnitude = ((radius - dist_from_player)/radius) * explosion_strength
 		magnitude = mid(explosion_strength/2, magnitude, explosion_strength)
-		local direction = atan2(player.x - x, player.y - y)
+		local direction = atan2(player.x - x, -abs(player.y - y))
 		player.x_velocity += cos(direction) * magnitude
 		player.y_velocity += sin(direction) * magnitude
 	end
