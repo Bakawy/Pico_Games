@@ -1,3 +1,36 @@
+function normal_hit_floor(self)
+	self.y_velocity = 0
+	local tx, ty = coordinate_to_tile(self.x, self.y)
+	mset(tx, ty, self.id)
+	self.dead = true
+end
+
+function bomb_hit_floor(self)
+	local tx, ty = coordinate_to_tile(self.x, self.y)
+	mset(tx, ty, self.id)
+	self.dead = true
+	explode(self.x, self.y, self.explosion_size)
+end
+
+function spring_hit_floor(self)
+	self.y_velocity *= -0.4
+	self.x_velocity *= 0.4
+	if abs(self.y_velocity) < 0.15 then
+		local tx, ty = coordinate_to_tile(self.x, self.y)
+		mset(tx, ty, self.id)
+		self.dead = true
+	end
+end
+
+function normal_hit_wall(self)
+	self.x_velocity = 0
+end
+
+function bomb_hit_wall(self)
+	explode(self.x, self.y, self.explosion_size)
+	self.dead = true
+end
+
 Tile = Class:new({
 	id=0,
 	x=64,
@@ -16,12 +49,11 @@ Tile = Class:new({
 			--is_solid_tile(x + 3, new_y + 4)
 		) then
 			y = flr((new_y + 4) / 8) * 8 - 4
-			y_velocity = 0
 			local tx, ty = coordinate_to_tile(x, y)
-			mset(tx, ty, id)
-			dead = true
-			if id == 17 then
-				explode(x, y, explosion_size)
+			if mget(tx, ty + 1) == 19 and y_velocity > 0.15 then
+				y_velocity *= -1
+			else
+				hit_floor(_ENV)
 			end
 		elseif y_velocity < 0 and (
 			check_tile_stat(x - 3, new_y - 4, 0) or
@@ -43,11 +75,7 @@ Tile = Class:new({
 				else
 					x = flr((new_x - 4) / 8 + 1) * 8 + 4
 				end
-				x_velocity = 0
-				if id == 17 then
-					explode(x, y, explosion_size)
-					dead = true
-				end
+				hit_wall(_ENV)
 			else
 				x = new_x
 			end
@@ -56,15 +84,31 @@ Tile = Class:new({
 	draw=function(_ENV)
 		spr(id, x - 4, y-4)
 	end,
+	hit_floor=normal_hit_floor,
+	hit_wall=normal_hit_wall,
 })
+tile_behaviors = {
+    [17] = {hit_floor=bomb_hit_floor, explosion_size=20, hit_wall=bomb_hit_wall},
+	[19] = {hit_floor=spring_hit_floor}
+}
+
 function spawn_thrown_tile(id, x, y, velocity, direction)
-	add(thrown_tiles, Tile:new({
-		id=id, 
-		x=x, 
-		y=y, 
-		x_velocity=velocity * cos(direction),
-		y_velocity=velocity * sin(direction),
-	}))
+    local tile = {
+        id = id,
+        x = x,
+        y = y,
+        x_velocity = velocity * cos(direction),
+        y_velocity = velocity * sin(direction),
+    }
+
+    local behavior = tile_behaviors[id]
+    if behavior then
+        for k, v in pairs(behavior) do
+            tile[k] = v
+        end
+    end
+
+    add(thrown_tiles, Tile:new(tile))
 end
 
 function move_tiles()
@@ -102,6 +146,12 @@ function explode(x, y, radius)
 		local direction = atan2(player.x - x, -abs(player.y - y))
 		player.x_velocity += cos(direction) * magnitude
 		player.y_velocity += sin(direction) * magnitude
+	end
+
+	for enemy in all(enemies) do
+		if dist(enemy.x, enemy.y, x, y) < radius then
+			del(enemies, enemy)
+		end
 	end
 end
 

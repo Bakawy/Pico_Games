@@ -31,3 +31,12 @@ function get_tiles_in_radius(cx, cy, radius)
 
 	return tiles
 end
+
+function in_list(val, list)
+    for item in all(list) do
+        if item == val then
+            return true
+        end
+    end
+    return false
+end

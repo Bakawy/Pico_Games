@@ -9,11 +9,12 @@ Player = Class:new({
     grappling = false,
     hook = nil,
     hitstun = 0,
+	standing_on = {},
 	move = function(_ENV)	
 		local frict = 1.5
 		local max_cayote_time = 5
 		local grounded = false
-		
+
 		apply_inputs(_ENV)
 		
 		if grappling and hook and not hook.attached then
@@ -71,6 +72,12 @@ Player = Class:new({
 		end
 		if not grounded and cayote_time > 0 then cayote_time -= 1 end
 		if hitstun > 0 then hitstun -= 1 end
+		local tx, ty = coordinate_to_tile(x, y+5)
+		standing_on = {
+			mget(tx - 1, ty),
+			mget(tx, ty),
+			mget(tx + 1, ty),
+		}
 	end,
 	apply_grapple_force = function(_ENV)
 		if not grappling or not hook or not hook.attached then return end
@@ -159,7 +166,12 @@ Player = Class:new({
 			cayote_time > 0 or
 			grappling
 		) then 
-			y_velocity = - jump_strength
+			local tx, ty = coordinate_to_tile(x, y+5)
+			local jump_strength_multiplier = 1
+			if in_list(19, standing_on) then
+				jump_strength_multiplier = 1.5
+			end
+			y_velocity = - jump_strength * jump_strength_multiplier
 			if grappling then
 				grappling = false
 				hook = nil

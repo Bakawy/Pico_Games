@@ -19,6 +19,8 @@ end
 function draw_debug()
 	print(flr(stat(1)*100).."% ram", 0, 0, 2)
 	if game_state == 1 then
-		--print(player.x_velocity)
+		for id in all(player.standing_on) do
+			print(id)
+		end
 	end
 end
