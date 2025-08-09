@@ -12,15 +12,11 @@ function init_game(environment)
 	game_state = 1
 	thrown_tiles = {}
 	enemies = {}
+	particles = {}
 	load_environment(environment)
 	spawn_enemies()
 end
 
 function draw_debug()
 	print(flr(stat(1)*100).."% ram", 0, 0, 2)
-	if game_state == 1 then
-		for id in all(player.standing_on) do
-			print(id)
-		end
-	end
 end

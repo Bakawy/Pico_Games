@@ -1,5 +1,5 @@
 function init_menu()
-	menu_items = {"platforming test", "bomb test", "grapple test", "enemy test", "spring test"}
+	menu_items = {"platforming test", "bomb test", "grapple test", "enemy test", "spring test", "sticky test"}
     menu_text = {}
     selected = 1
     disableinput = 30
@@ -28,6 +28,8 @@ function update_menu()
             init_game(3)
         elseif menu_items[selected] == "spring test" then
             init_game(4)
+        elseif menu_items[selected] == "sticky test" then
+            init_game(5)
 		end
     end
 end

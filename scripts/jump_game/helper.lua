@@ -2,6 +2,10 @@ function coordinate_to_tile(x, y)
 	return flr(x / 8), flr(y / 8)
 end
 
+function round_to_multiple(number, multiple)
+	return flr(number/multiple+0.5)*multiple
+end
+
 function dist(x1, y1, x2, y2)
 	return sqrt((x2 - x1)^2 + (y2 - y1)^2)
 end
@@ -39,4 +43,152 @@ function in_list(val, list)
         end
     end
     return false
+end
+
+tile_size = 8
+half_size = 4
+speed_sweep_threshold = 8
+
+function dist_to_seam(edge, dir)
+  local r = edge % tile_size
+  if dir > 0 then
+    return (r == 0) and tile_size or (tile_size - r)
+  else
+    return (r == 0) and tile_size or r
+  end
+end
+
+function solid_down(x,y)
+  return check_tile_stat(x-3, y+half_size, 0)
+      or check_tile_stat(x,   y+half_size, 0)
+      or check_tile_stat(x+3, y+half_size, 0)
+end
+
+function solid_up(x,y)
+  return check_tile_stat(x-3, y-half_size, 0)
+      or check_tile_stat(x,   y-half_size, 0)
+      or check_tile_stat(x+3, y-half_size, 0)
+end
+
+-- dir = +1 (right) or -1 (left)
+function solid_side(x,y,dir)
+  local off = (dir>0) and half_size or -half_size
+  return check_tile_stat(x+off, y-3, 0)
+      or check_tile_stat(x+off, y,   0)
+      or check_tile_stat(x+off, y+3, 0)
+end
+
+function simple_move_y(x,y,vy)
+	local new_y = y + vy
+	local collided = false
+	if vy > 0 and solid_down(x, new_y) then
+		y = flr((new_y + 4) / 8) * 8 - 4
+		vy = 0
+		collided = true
+	elseif vy < 0 and solid_up(x, new_y) then
+		y = flr((new_y - 4) / 8 + 1) * 8 + 4
+		vy = 0
+		collided = true
+	else
+		y = new_y
+	end
+	return y, vy, collided
+end
+
+function sweep_move_y(x,y,vy)
+  local rem = vy
+  local collided = false
+  while rem ~= 0 do
+    local dir  = sgn(rem)           
+    local edge = y + dir*half_size
+    local step = min(abs(rem), dist_to_seam(edge, dir))
+    local ny   = y + dir*step
+
+    if dir > 0 then
+      if solid_down(x, ny) then
+        y  = flr((ny + half_size)/tile_size)*tile_size - half_size
+        vy = 0
+        collided = true
+        break
+      else
+        y = ny
+        rem -= dir*step
+      end
+    else
+      if solid_up(x, ny) then
+        y  = flr((ny - half_size)/tile_size + 1)*tile_size + half_size
+        vy = 0
+        break
+      else
+        y = ny
+        rem -= dir*step
+      end
+    end
+  end
+  return y, vy, collided
+end
+
+function simple_move_x(x,y,vx)
+	local new_x = x + vx
+	local collided = false
+	if vx != 0 then
+		local offset = vx > 0 and 4 or -4
+		if solid_side(new_x, y, sgn(vx)) then
+			if vx > 0 then
+				x = flr((new_x + 4) / 8) * 8 - 4
+			else
+				x = flr((new_x - 4) / 8 + 1) * 8 + 4
+			end
+			vx = 0
+			collided = true
+		else
+			x = new_x
+		end
+	end
+	return x, vx, collided
+end
+
+function sweep_move_x(x,y,vx)
+  local rem = vx
+  local collided = false
+  while rem ~= 0 do
+    local dir  = sgn(rem)              -- +1 right, -1 left
+    local edge = x + dir*half_size
+    local step = min(abs(rem), dist_to_seam(edge, dir))
+    local nx   = x + dir*step
+
+    if solid_side(nx, y, dir) then
+      -- snap to wall seam and stop
+      if dir > 0 then
+        x = flr((nx + half_size)/tile_size)*tile_size - half_size
+      else
+        x = flr((nx - half_size)/tile_size + 1)*tile_size + half_size
+      end
+      vx = 0
+	  collided = true
+      break
+    else
+      x = nx
+      rem -= dir*step
+    end
+  end
+  return x, vx, collided
+end
+
+function is_anchored(tx, ty, dir)
+	dir = dir or "none"
+	id = mget(tx, ty)
+	if not fget(id, 0) then return false end
+	if fget(id, 3) then return true end
+	if id == 20 then
+		if dir ~= "r" then if fget(mget(tx + 1, ty), 3) then return true end end
+		if dir ~= "l" then if fget(mget(tx - 1, ty), 3) then return true end end
+		if dir ~= "d" then if fget(mget(tx, ty + 1), 3) then return true end end
+		if dir ~= "u" then if fget(mget(tx, ty - 1), 3) then return true end end
+	end
+	if dir ~= "r" then if is_anchored(tx + 1, ty, "l") then return true end end
+	if dir ~= "l" then if is_anchored(tx - 1, ty, "r") then return true end end
+	if dir ~= "d" then if is_anchored(tx, ty + 1, "u") then return true end end
+	if dir ~= "u" then if is_anchored(tx, ty - 1, "d") then return true end end
+	return false
 end

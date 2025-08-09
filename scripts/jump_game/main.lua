@@ -18,6 +18,7 @@ function _update60()
 		player:move()
 		move_tiles()
 		move_enemies()
+		update_particles()
 	end
 end
 
@@ -29,6 +30,7 @@ function _draw()
 		draw_thrown_tiles()
 		player:draw()
 		draw_enemies()
+		draw_particles()
 	end
 	draw_debug()
 end

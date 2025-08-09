@@ -1,13 +1,16 @@
 function normal_hit_floor(self)
 	self.y_velocity = 0
 	local tx, ty = coordinate_to_tile(self.x, self.y)
+	local tx2 = coordinate_to_tile(
+		(self.x % 8 >= 4) and (self.x + tile_size) or (self.x - tile_size),
+		self.y
+	)
+	if not fget(mget(tx, ty + 1), 0) then tx = tx2 end
 	mset(tx, ty, self.id)
 	self.dead = true
 end
 
 function bomb_hit_floor(self)
-	local tx, ty = coordinate_to_tile(self.x, self.y)
-	mset(tx, ty, self.id)
 	self.dead = true
 	explode(self.x, self.y, self.explosion_size)
 end
@@ -26,8 +29,39 @@ function normal_hit_wall(self)
 	self.x_velocity = 0
 end
 
+function sticky_hit_wall(self)
+	local _ = 0
+	local dir = sgn(self.x_velocity)
+	self.x_velocity = 0
+
+	local tx, ty = coordinate_to_tile(self.x, self.y)
+	local _, ty2 = coordinate_to_tile(
+		self.x,
+		(self.y % 8 >= 4) and (self.y + tile_size) or (self.y - tile_size)
+	)
+	if not fget(mget(tx + dir, ty), 0) then ty = ty2 end
+	mset(tx, ty, self.id)
+	self.dead = true
+end
+
 function bomb_hit_wall(self)
 	explode(self.x, self.y, self.explosion_size)
+	self.dead = true
+end
+
+function normal_hit_ceiling(self)
+	self.y_velocity = 0
+end
+
+function sticky_hit_ceiling(self)
+	self.y_velocity = 0
+	local tx, ty = coordinate_to_tile(self.x, self.y)
+	local tx2 = coordinate_to_tile(
+		(self.x % 8 >= 4) and (self.x + tile_size) or (self.x - tile_size),
+		self.y
+	)
+	if not fget(mget(tx, ty - 1), 0) then tx = tx2 end
+	mset(tx, ty, self.id)
 	self.dead = true
 end
 
@@ -42,42 +76,61 @@ Tile = Class:new({
 		local explosion_size = 20
 		y_velocity += gravity
 
-		local new_y = y + y_velocity
-		if y_velocity > 0 and (
-			--is_solid_tile(x - 3, new_y + 4) or
-			check_tile_stat(x, new_y + 4, 0) --or
-			--is_solid_tile(x + 3, new_y + 4)
-		) then
-			y = flr((new_y + 4) / 8) * 8 - 4
+		local collided = false
+		local _ = 0
+		if abs(y_velocity) < speed_sweep_threshold then
+			y, _, collided = simple_move_y(x, y, y_velocity)
+		else
+			y, y_velocity, collided = sweep_move_y(x, y, y_velocity)
+		end
+
+		if y_velocity > 0 and collided then
 			local tx, ty = coordinate_to_tile(x, y)
 			if mget(tx, ty + 1) == 19 and y_velocity > 0.15 then
 				y_velocity *= -1
 			else
 				hit_floor(_ENV)
+				if dead then return end
 			end
-		elseif y_velocity < 0 and (
-			check_tile_stat(x - 3, new_y - 4, 0) or
-			check_tile_stat(x, new_y - 4, 0) or
-			check_tile_stat(x + 3, new_y - 4, 0) 
-		) then
-			y = flr((new_y - 4) / 8 + 1) * 8 + 4
-			y_velocity = 0
-		else
-			y = new_y
+		elseif y_velocity < 0 and collided then
+			local tx, ty = coordinate_to_tile(x, y)
+			local tx2 = coordinate_to_tile(
+				(x % 8 >= 4) and (x + tile_size) or (x - tile_size),
+				y
+			)
+			if not fget(mget(tx, ty - 1), 0) then tx = tx2 end
+			if mget(tx, ty - 1) == 20 then
+				mset(tx, ty, id)
+				dead = true
+				return
+			else
+				hit_ceiling(_ENV)
+				if dead then return end
+			end
 		end
 
-		local new_x = x + x_velocity
-		if x_velocity != 0 then
-			local offset = x_velocity > 0 and 4 or -4
-			if check_tile_stat(new_x + offset, y, 0) then
-				if x_velocity > 0 then
-					x = flr((new_x + 4) / 8) * 8 - 4
-				else
-					x = flr((new_x - 4) / 8 + 1) * 8 + 4
-				end
-				hit_wall(_ENV)
+		collided = false
+		if abs(x_velocity) < speed_sweep_threshold then
+			x, _, collided = simple_move_x(x, y, x_velocity)
+		else
+			x, _, collided = sweep_move_x(x, y, x_velocity)
+		end
+
+		if collided then
+			local tx, ty = coordinate_to_tile(x, y)
+			local _ = 0
+			local _, ty2 = coordinate_to_tile(
+				x,
+				(y % 8 >= 4) and (y + tile_size) or (y - tile_size)
+			)
+			if not fget(mget(tx + sgn(x_velocity), ty), 0) then ty = ty2 end
+			if mget(tx + sgn(x_velocity), ty) == 20 then
+				mset(tx, ty, id)
+				dead = true
+				return
 			else
-				x = new_x
+				hit_wall(_ENV)
+				if dead then return end
 			end
 		end
 	end,
@@ -86,20 +139,25 @@ Tile = Class:new({
 	end,
 	hit_floor=normal_hit_floor,
 	hit_wall=normal_hit_wall,
+	hit_ceiling=normal_hit_ceiling,
 })
 tile_behaviors = {
     [17] = {hit_floor=bomb_hit_floor, explosion_size=20, hit_wall=bomb_hit_wall},
-	[19] = {hit_floor=spring_hit_floor}
+	[19] = {hit_floor=spring_hit_floor},
+	[20] = {hit_wall=sticky_hit_wall, hit_ceiling=sticky_hit_ceiling},
 }
 
 function spawn_thrown_tile(id, x, y, velocity, direction)
-    local tile = {
+    local tile = Tile:new({
         id = id,
         x = x,
         y = y,
         x_velocity = velocity * cos(direction),
         y_velocity = velocity * sin(direction),
-    }
+    })
+	while check_tile_stat(tile.x, tile.y, 0) do
+		tile:move()
+	end
 
     local behavior = tile_behaviors[id]
     if behavior then
@@ -108,7 +166,7 @@ function spawn_thrown_tile(id, x, y, velocity, direction)
         end
     end
 
-    add(thrown_tiles, Tile:new(tile))
+    add(thrown_tiles, tile)
 end
 
 function move_tiles()
@@ -137,7 +195,8 @@ function explode(x, y, radius)
 					spawn_thrown_tile(tile.id, cx, cy, magnitude, direction)
 				end
 			end
-		end
+			update_surrounding(tile.x, tile.y)
+		end	
 	end
 
 	if dist_from_player < radius then
@@ -153,10 +212,44 @@ function explode(x, y, radius)
 			del(enemies, enemy)
 		end
 	end
+
+	add(particles, Particles:new({x=x, y=y, size=radius * 2, delta_size=-2, frames=radius, sprite_id=64}))
 end
 
 function draw_thrown_tiles()
 	for tile in all(thrown_tiles) do
 		tile:draw()
+	end
+end
+
+function update_map_tile(tx, ty)
+	local tile_id = mget(tx, ty)
+	if tile_id == 0 then return end
+	local px, py = tx * 8 + 4, ty * 8 + 4
+	local did_update = false
+
+	--check if flying
+	if not fget(mget(tx, ty + 1), 0) and not fget(tile_id, 3) then
+		if not is_anchored(tx, ty) then
+			spawn_thrown_tile(tile_id, px, py, 0, 0)
+			mset(tx, ty, 0)
+			did_update = true
+		end
+	end
+
+	if did_update then
+		update_surrounding(tx, ty)
+	end
+end
+
+function update_surrounding(tx, ty)
+	local update_other = {
+		{tx - 1, ty},
+		{tx + 1, ty},
+		{tx, ty - 1},
+		{tx, ty + 1},
+	}
+	for tile in all(update_other) do
+		update_map_tile(tile[1], tile[2])
 	end
 end

@@ -2,22 +2,31 @@ Enemy = Class:new({
 	x = 64,
 	y = 64,
 	x_velocity = 0,
+	y_velocity = 0,
 	id = 0,
 	dead = false,
 	update = function(_ENV)
-		local new_x = x + x_velocity
-		if x_velocity ~= 0 then
-			local offset = x_velocity > 0 and 4 or -4
-			if check_tile_stat(new_x + offset, y, 0) then
-			x = x_velocity > 0 and flr((new_x + 4)/8)*8 - 4
-										or  flr((new_x - 4)/8 + 1)*8 + 4
-			x_velocity = -x_velocity
-			elseif not check_tile_stat(new_x + offset, y + 5, 0) then
-			x_velocity = -x_velocity
+		local _ = 0
+		local collided = false
+
+		if abs(x_velocity) < speed_sweep_threshold then
+			x, _, collided = simple_move_x(x, y, x_velocity)
+		else
+			x, _, collided = sweep_move_x(x, y, x_velocity)
+		end
+
+		if collided then
+			x_velocity *= -1
+		elseif not check_tile_stat(x + half_size * sgn(x_velocity), y + half_size + 1, 0) then
+			x_velocity *= -1
 			x += x_velocity
-			else
-			x = new_x
-			end
+		end
+
+		y_velocity += gravity
+		if abs(y_velocity) < speed_sweep_threshold then
+			y, y_velocity, collided = simple_move_y(x, y, y_velocity)
+		else
+			y, y_velocity, collided = sweep_move_y(x, y, y_velocity)
 		end
 
 		-- player collision
@@ -35,7 +44,7 @@ Enemy = Class:new({
 	end,
 	draw = function(_ENV)
 		spr(id, x - 4, y - 4)
-	end
+	end,
 })
 
 

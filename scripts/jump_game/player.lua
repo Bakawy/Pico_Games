@@ -28,43 +28,25 @@ Player = Class:new({
 		end
 
 		apply_grapple_force(_ENV)
-
+		
 		y_velocity += gravity
-
-		local new_y = y + y_velocity
-		if y_velocity > 0 and (
-			check_tile_stat(x - 3, new_y + 4, 0) or
-			check_tile_stat(x, new_y + 4, 0) or
-			check_tile_stat(x + 3, new_y + 4, 0)
-		) then
-			y = flr((new_y + 4) / 8) * 8 - 4
-			y_velocity = 0
-			cayote_time = max_cayote_time
-			grounded = true
-		elseif y_velocity < 0 and (
-			check_tile_stat(x - 3, new_y - 4, 0) or
-			check_tile_stat(x, new_y - 4, 0) or
-			check_tile_stat(x + 3, new_y - 4, 0) 
-		) then
-			y = flr((new_y - 4) / 8 + 1) * 8 + 4
-			y_velocity = 0
+		local old_y_velocity = y_velocity
+		local collided = false
+		if abs(y_velocity) < speed_sweep_threshold then
+			y, y_velocity, collided = simple_move_y(x, y, y_velocity)
 		else
-			y = new_y
+			y, y_velocity, collided = sweep_move_y(x, y, y_velocity)
 		end
 
-		local new_x = x + x_velocity
-		if x_velocity != 0 then
-			local offset = x_velocity > 0 and 4 or -4
-			if check_tile_stat(new_x + offset, y, 0) then
-				if x_velocity > 0 then
-					x = flr((new_x + 4) / 8) * 8 - 4
-				else
-					x = flr((new_x - 4) / 8 + 1) * 8 + 4
-				end
-				x_velocity = 0
-			else
-				x = new_x
-			end
+		if old_y_velocity > 0 and collided then
+			grounded = true
+			cayote_time = max_cayote_time
+		end
+
+		if abs(x_velocity) < speed_sweep_threshold then
+			x, x_velocity = simple_move_x(x, y, x_velocity)
+		else
+			x, x_velocity = sweep_move_x(x, y, x_velocity)
 		end
 		
 		if hitstun <= 0 then
@@ -191,6 +173,7 @@ Player = Class:new({
 						local tile_id = mget(tx, ty)
 						mset(tx, ty, 0)
 						grabbing = tile_id
+						update_surrounding(tx, ty)
 						break
 					end
 				end
