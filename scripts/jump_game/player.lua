@@ -10,10 +10,14 @@ Player = Class:new({
     hook = nil,
     hitstun = 0,
 	standing_on = {},
+	grounded = false,
+	stored_tile = -1,
+	status = {}, --speed: speed multiplier,
 	move = function(_ENV)	
 		local frict = 1.5
 		local max_cayote_time = 5
-		local grounded = false
+		local gravity_multiplier = 1
+
 
 		apply_inputs(_ENV)
 		
@@ -30,25 +34,47 @@ Player = Class:new({
 		apply_grapple_force(_ENV)
 		
 		y_velocity += gravity
-		local old_y_velocity = y_velocity
-		local collided = false
-		if abs(y_velocity) < speed_sweep_threshold then
-			y, y_velocity, collided = simple_move_y(x, y, y_velocity)
-		else
-			y, y_velocity, collided = sweep_move_y(x, y, y_velocity)
+		if grabbing == 21 then 
+			y_velocity = min(y_velocity, 1)
+		end
+		if mget(coordinate_to_tile(x, y)) == 50 then
+			if y_velocity > 0 then y_velocity *= 0.7 end
+			cayote_time = max_cayote_time
+		end
+		for tile in all(thrown_tiles) do
+			if tile.id == 24 then
+				if dist(x, y, tile.x, tile.y) < water_tile_radius then
+					if y_velocity > 0 then y_velocity *= 0.4 end
+					x_velocity *= 0.95
+					cayote_time = max_cayote_time
+				end
+			elseif tile.id == 26 and tile.life then
+				if dist(x, y, tile.x, tile.y) < tile.life + sqrt(32) then
+					if stored_tile == -1 then stored_tile = 16 end
+				end
+			end
 		end
 
+
+		local old_y_velocity = y_velocity
+		local collided = false
+		y, y_velocity, collided = move_y(x, y, y_velocity)
+
+		grounded = false
 		if old_y_velocity > 0 and collided then
 			grounded = true
 			cayote_time = max_cayote_time
 		end
 
-		if abs(x_velocity) < speed_sweep_threshold then
-			x, x_velocity = simple_move_x(x, y, x_velocity)
-		else
-			x, x_velocity = sweep_move_x(x, y, x_velocity)
-		end
+		x, x_velocity = move_x(x, y, x_velocity)
 		
+		for s in all(status) do
+			if s.length <= 0 then
+				del(status, s)
+			end
+			s.length -= 1
+		end
+		if status.speed then frict *= status.speed.magnitude end
 		if hitstun <= 0 then
 			x_velocity = abs(x_velocity) < frict and 0 or x_velocity - sgn(x_velocity)*frict
 		end
@@ -133,6 +159,7 @@ Player = Class:new({
 		local jump_strength = 4
 		if hitstun > 0 then return end
 
+		if status.speed then speed *= status.speed.magnitude end
 		if btn(L) then
 			x_velocity -= speed
 			facing = L
@@ -141,46 +168,61 @@ Player = Class:new({
 			facing = R
 		end
 
-		if btnp(O) and (
-			check_tile_stat(x - 3, y+5, 0) or
-			check_tile_stat(x, y+5, 0) or
-			check_tile_stat(x + 3, y+5, 0) or
+		if false then
+			--add(particles, Particles:new({x=64, y=64, size=10 * 2, delta_size=-2, frames=10, sprite_id=64}))
+			local temp = stored_tile
+			stored_tile = grabbing
+			grabbing = temp
+			return
+		end
+
+		if btnp(O) then 
+			if btn(U) and (grabbing != -1 or stored_tile != -1) then
+				local temp = stored_tile
+				stored_tile = grabbing
+				grabbing = temp	
+				if grappling then
+					grappling = false
+					hook = nil
+				end
+			elseif (
+			on_ground(x, y) or
 			cayote_time > 0 or
 			grappling
-		) then 
-			local tx, ty = coordinate_to_tile(x, y+5)
-			local jump_strength_multiplier = 1
-			if in_list(19, standing_on) then
-				jump_strength_multiplier = 1.5
-			end
-			y_velocity = - jump_strength * jump_strength_multiplier
-			if grappling then
-				grappling = false
-				hook = nil
+			) then
+				local tx, ty = coordinate_to_tile(x, y+5)
+				local jump_strength_multiplier = 1
+				if in_list(19, standing_on) then
+					jump_strength_multiplier = 1.5
+				end
+				y_velocity = - jump_strength * jump_strength_multiplier
+				if grappling then
+					grappling = false
+					hook = nil
+				end
 			end
 		end
 
 		if btnp(X) then
 			if btn(D) and grabbing == -1 then
-				grabbable_tiles = {
-					{state=check_tile_stat(x, y+5, 1), x=x, y=y+5},
-					{state=check_tile_stat(x-3, y+5, 1), x=x-3, y=y+5},
-					{state=check_tile_stat(x+3, y+5, 1), x=x+3, y=y+5},
-				}
-				for tile in all(grabbable_tiles) do
-					if tile.state then
-						local tx, ty = coordinate_to_tile(tile.x, tile.y)
-						local tile_id = mget(tx, ty)
-						mset(tx, ty, 0)
-						grabbing = tile_id
-						update_surrounding(tx, ty)
-						break
-					end
+				local tx, ty = false, false
+				if check_tile_stat(x, y+5, 1) then
+					tx,ty=coordinate_to_tile(x, y+5)
+				elseif check_tile_stat(x-3, y+5,1) then
+					tx,ty=coordinate_to_tile(x-3, y+5)
+				elseif check_tile_stat(x+3, y+5,1) then
+					tx,ty=coordinate_to_tile(x+3, y+5)
+				end
+				if tx then
+					local tile_id=mget(tx,ty)
+					mset(tx,ty,0)
+					grabbing=tile_id
+					update_surrounding(tx,ty)
 				end
 			elseif btn(D) and grabbing != -1 then
-				spawn_thrown_tile(grabbing, x, y - 8, 1, 0.75)
+				spawn_thrown_tile(grabbing, x, y - 8, 1, 0.75, false)
+				y_velocity = - jump_strength * (grabbing == 19 and 1.25 or 1)
 				grabbing = -1
-				y_velocity = - jump_strength
 				if grappling then
 					grappling = false
 					hook = nil
@@ -194,15 +236,24 @@ Player = Class:new({
 						grappling = false
 						hook = nil
 					end
+				elseif grabbing == 22 then
+					local speed = 15
+					x_velocity += speed * (facing == R and 1 or -1)
+					grabbing = 16
 				end
 			elseif grabbing != -1 then
-				spawn_thrown_tile(grabbing, x, y - 8, 3, facing == L and 0.375 or 0.125)
-				grabbing = -1
-				if grappling then
-					grappling = false
-					hook = nil
-				end
+				normal_throw(_ENV)
 			end
 		end
 	end,
+	normal_throw = function(_ENV)
+		local throw_power = 3
+
+		spawn_thrown_tile(grabbing, x, y - 8, throw_power, facing == L and 0.375 or 0.125)
+		grabbing = -1
+		if grappling then
+			grappling = false
+			hook = nil
+		end
+	end
 })

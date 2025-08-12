@@ -3,6 +3,8 @@ Particles = Class:new({
     y=64,
     x_velocity=0,
     y_velocity=0,
+    x_acceleration=0,
+    y_acceleration=0,
     frames=0,
     sprite_id=0,
     size=8,
@@ -11,6 +13,8 @@ Particles = Class:new({
     update=function(_ENV)
         frames -= 1
         if frames <= -1 then dead=true end
+        x_velocity += x_acceleration
+        y_velocity += y_acceleration
         x += x_velocity
         y += y_velocity
         size += delta_size

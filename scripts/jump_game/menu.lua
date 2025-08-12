@@ -1,5 +1,5 @@
 function init_menu()
-	menu_items = {"platforming test", "bomb test", "grapple test", "enemy test", "spring test", "sticky test"}
+	menu_items = {"platforming test", "bomb test", "grapple test", "enemy test", "movement tile test", "building tile test"}
     menu_text = {}
     selected = 1
     disableinput = 30
@@ -26,9 +26,9 @@ function update_menu()
             init_game(2)
 		elseif menu_items[selected] == "enemy test" then
             init_game(3)
-        elseif menu_items[selected] == "spring test" then
+        elseif menu_items[selected] == "movement tile test" then
             init_game(4)
-        elseif menu_items[selected] == "sticky test" then
+        elseif menu_items[selected] == "building tile test" then
             init_game(5)
 		end
     end
@@ -42,11 +42,12 @@ function draw_menu()
     end
 
     for i, item in ipairs(menu_items) do
-        local y = 40 + i * 10
+        local y = 30 + i * 10
+        local x = 32
         if i == selected then
-            print("> "..item, 36, y, 11)
+            print("> "..item, x - 8, y, 11)
         else
-            print(item, 44, y, 6)
+            print(item, x, y, 6)
         end
     end
 end
