@@ -8,6 +8,7 @@ function _init()
     O=4
     X=5
 	water_tile_radius = 24
+	screen_left = 0
 
 	init_menu()
 	
@@ -23,6 +24,10 @@ function _update60()
 		move_tiles()
 		move_enemies()
 		update_particles()
+	elseif game_state == 2 then
+		player:move()
+		move_tiles()
+		update_particles()
 	end
 end
 
@@ -30,11 +35,25 @@ function _draw()
 	if game_state == 0 then
 		draw_menu()
 	elseif game_state == 1 then
+		local player_range = {24, 48}
+		if player.x - screen_left < player_range[1] then
+			screen_left = mid(0, player.x - player_range[1], 888)
+		elseif player.x - screen_left > player_range[2] then
+			screen_left = mid(0, player.x - player_range[2], 888)
+		end
+		camera(screen_left, 0)
 		draw_thrown_tile_effects()
 		draw_environment()
 		draw_thrown_tiles()
 		player:draw()
 		draw_enemies()
+		draw_particles()
+		draw_hud()
+	elseif game_state == 2 then
+		draw_thrown_tile_effects()
+		draw_environment()
+		draw_thrown_tiles()
+		player:draw()
 		draw_particles()
 		draw_hud()
 	end

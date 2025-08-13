@@ -37,7 +37,11 @@ Player = Class:new({
 		if grabbing == 21 then 
 			y_velocity = min(y_velocity, 1)
 		end
-		if mget(coordinate_to_tile(x, y)) == 50 then
+		if (
+			mget(coordinate_to_tile(x - 3, y)) == 50 or
+			mget(coordinate_to_tile(x, y)) == 50 or
+			mget(coordinate_to_tile(x + 3, y)) == 50
+		) then
 			if y_velocity > 0 then y_velocity *= 0.7 end
 			cayote_time = max_cayote_time
 		end
@@ -166,6 +170,10 @@ Player = Class:new({
 		elseif btn(R) then
 			x_velocity += speed
 			facing = R
+		end	
+
+		if btnp(U) and check_tile_stat(x, y, 4) then
+			init_game(game_state % 2)
 		end
 
 		if false then
