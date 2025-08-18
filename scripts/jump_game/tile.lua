@@ -4,7 +4,7 @@ function normal_hit_floor(self)
 	local dir = nearest_axis(self.x) -- -1 left, +1 right
 	local tx2 = coordinate_to_tile(self.x + dir*tile_size, self.y)
 	if not fget(mget(tx, ty + 1), 0) then tx = tx2 end
-	mset(tx, ty, self.id)
+	place_tile(tx, ty, self.id)
 	self.dead = true
 end
 
@@ -18,7 +18,7 @@ function spring_hit_floor(self)
 	self.x_velocity *= 0.4
 	if abs(self.y_velocity) < 0.15 then
 		local tx, ty = coordinate_to_tile(self.x, self.y)
-		mset(tx, ty, self.id)
+		place_tile(tx, ty, self.id)
 		self.dead = true
 	end
 end
@@ -34,12 +34,12 @@ function vine_hit_floor(self)
 	local dir = nearest_axis(self.x) -- -1 left, +1 right
 	local tx2 = coordinate_to_tile(self.x + dir*tile_size, self.y)
 	if not fget(mget(tx, ty + 1), 0) then tx = tx2 end
-	mset(tx, ty, 51)
+	place_tile(tx, ty, 51)
 
 	for i=ty-1,0,-1 do
 		local id=mget(tx, i)
 		if fget(id, 0) then break end
-		mset(tx, i, 50)
+		place_tile(tx, i, 50)
 	end
 	self.dead = true
 end
@@ -64,7 +64,7 @@ function sticky_hit_wall(self) --also used for dash
 	local dir = nearest_axis(self.y) -- -1 left, +1 right
 	local _, ty2 = coordinate_to_tile(self.x, self.y + dir*tile_size)
 	if not fget(mget(tx + sgn(self.x_velocity), ty), 0) then ty = ty2 end
-	mset(tx, ty, self.id)
+	place_tile(tx, ty, self.id)
 	self.dead = true
 end
 
@@ -83,7 +83,7 @@ function sticky_hit_ceiling(self)
 	local dir = nearest_axis(self.x)
 	local tx2 = coordinate_to_tile(self.x + dir*tile_size, self.y)
 	if not fget(mget(tx, ty - 1), 0) then tx = tx2 end
-	mset(tx, ty, self.id)
+	place_tile(tx, ty, self.id)
 	self.dead = true
 end
 
@@ -134,7 +134,7 @@ function normal_move(self)
 		local tx2 = coordinate_to_tile(x + dir*tile_size, y)
 		if not fget(mget(tx, ty - 1), 0) then tx = tx2 end
 		if mget(tx, ty - 1) == 20 then
-			mset(tx, ty, id)
+			place_tile(tx, ty, id)
 			dead = true
 			return
 		else
@@ -152,7 +152,7 @@ function normal_move(self)
 		local _, ty2 = coordinate_to_tile(x, y + dir*tile_size)
 		if not fget(mget(tx + sgn(x_velocity), ty), 0) then ty = ty2 end
 		if mget(tx + sgn(x_velocity), ty) == 20 then
-			mset(tx, ty, id)
+			place_tile(tx, ty, id)
 			dead = true
 			return
 		else
@@ -182,8 +182,8 @@ function lasso_move(self)
 	x += x_velocity
 	y += y_velocity
 	if (
-		x < 0 or
-		x > 128 or
+		x < screen_left or
+		x > screen_left + 128 or
 		y < 0 or
 		y > 128 
 	) then
@@ -307,7 +307,7 @@ function explode(x, y, radius)
 	for tile in all(get_tiles_in_radius(x, y, radius)) do
 		local cx, cy = tile.x * 8 + 4, tile.y * 8 + 4
 		if fget(tile.id, 0) and not fget(tile.id, 2) then
-			mset(tile.x, tile.y, 0)
+			place_tile(tile.x, tile.y, 0)
 
 			if tile.id == 17 then
 				explode(cx, cy, radius)
@@ -377,7 +377,7 @@ function update_map_tile(tx, ty)
 	if not fget(mget(tx, ty + 1), 0) and not fget(tile_id, 3) then
 		if not is_anchored(tx, ty) then
 			spawn_thrown_tile(tile_id, px, py, 0, 0)
-			mset(tx, ty, 0)
+			place_tile(tx, ty, 0)
 			did_update = true
 		end
 	end
@@ -395,3 +395,13 @@ function update_surrounding(tx, ty)
 end
 
 function nearest_axis(p) return (p%8>=4) and 1 or -1 end
+
+function place_tile(x, y, id)
+	if y > 15 then return end
+	local cx, cy = x * 8 + 4, y * 8 + 4
+	if fget(mget(x, y), 5) and id != 0 then
+		spawn_thrown_tile(id, cx, cy, 2, rnd(0.5), false)
+	else
+		mset(x, y, id)
+	end
+end

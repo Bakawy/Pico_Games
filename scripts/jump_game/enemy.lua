@@ -52,7 +52,7 @@ Enemy = Class:new({
 
 
 function spawn_enemies()
-	for x=0, 15 do
+	for x=0, 127 do
 		for y=0, 15 do 
 			local tile_id = mget(x, y)
 			if tile_id == 80 then

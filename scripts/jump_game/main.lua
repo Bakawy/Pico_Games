@@ -9,6 +9,8 @@ function _init()
     X=5
 	water_tile_radius = 24
 	screen_left = 0
+	score = 0
+	level = 0
 
 	init_menu()
 	
@@ -20,9 +22,11 @@ function _update60()
 	if game_state == 0 then
 		update_menu()
 	elseif game_state == 1 then
+		update_score()
 		player:move()
 		move_tiles()
 		move_enemies()
+		update_death_wall()
 		update_particles()
 	elseif game_state == 2 then
 		player:move()
@@ -47,11 +51,13 @@ function _draw()
 		draw_thrown_tiles()
 		player:draw()
 		draw_enemies()
+		draw_death_wall()
 		draw_particles()
 		draw_hud()
 	elseif game_state == 2 then
 		draw_thrown_tile_effects()
 		draw_environment()
+		draw_shop()
 		draw_thrown_tiles()
 		player:draw()
 		draw_particles()

@@ -24,15 +24,21 @@ end
 
 function generate_level() --chunks must be on the same column
 	local chunks = get_chunks()
+	local last_chunk = 0
 	copy_map(24, 16, 0, 0, 5, 16)
 	local map_x = 4
 	local end_x = 127 - 8
 	while map_x < end_x do
-		local chunk = rnd(chunks)
+		local chunk = 0
+		while chunk == last_chunk or chunk == 0 do chunk = rnd(chunks) end
+		last_chunk = chunk
 		if map_x + chunk.w >= end_x then 
 			for i=0, end_x - map_x - 1 do
 				mset(map_x, 0, 49)
 				mset(map_x, 15, 49)
+				if i == end_x - map_x - 1 then
+					mset(map_x, 14, 80)
+				end
 				map_x += 1
 			end
 			break
@@ -72,4 +78,28 @@ function get_chunks()
 	end
 	assert(#chunks != 0, "no chunks found")
 	return chunks
+end
+
+function draw_shop()
+	rect(103, 103, 120, 120, 4)
+	print("\#1\f4\-hstorage", 98, 96)
+end
+
+function update_death_wall()
+	if not death_wall then return end
+	death_wall.speed = min(death_wall.speed + death_wall.acceleration, death_wall.max_speed)
+	death_wall.x = min(death_wall.x + death_wall.speed, 976)
+
+	if player.x + 4 < death_wall.x then
+		run()
+	end
+	for enemy in all(enemies) do
+		if enemy.x + 4 < death_wall.x then
+			enemy.dead = {1, -1}
+		end
+	end
+end
+
+function draw_death_wall()
+	rectfill(0, 0, death_wall.x, 128, 8)
 end

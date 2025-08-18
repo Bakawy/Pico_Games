@@ -1,5 +1,5 @@
 function init_menu()
-	menu_items = {"play"}
+	menu_items = {"play", "shop"}
     menu_text = {}
     camera()
     selected = 1
@@ -21,6 +21,8 @@ function update_menu()
     if (btnp(4) or btnp(5)) and disableinput <= 0 then
         if menu_items[selected] == "play" then
             init_game(0)
+        elseif menu_items[selected] == "shop" then
+            init_game(1)
         end
     end
 end

@@ -9,10 +9,12 @@ Player = Class:new({
     grappling = false,
     hook = nil,
     hitstun = 0,
+	invulnerable = 0,
 	standing_on = {},
 	grounded = false,
 	stored_tile = -1,
 	status = {}, --speed: speed multiplier,
+	throwing = nil,
 	move = function(_ENV)	
 		local frict = 1.5
 		local max_cayote_time = 5
@@ -66,6 +68,9 @@ Player = Class:new({
 
 		grounded = false
 		if old_y_velocity > 0 and collided then
+			if mget(coordinate_to_tile(x, y + 5)) == 58 then
+				damage(_ENV)
+			end
 			grounded = true
 			cayote_time = max_cayote_time
 		end
@@ -84,6 +89,7 @@ Player = Class:new({
 		end
 		if not grounded and cayote_time > 0 then cayote_time -= 1 end
 		if hitstun > 0 then hitstun -= 1 end
+		if invulnerable > 0 then invulnerable -= 1 end
 		local tx, ty = coordinate_to_tile(x, y+5)
 		standing_on = {
 			mget(tx - 1, ty),
@@ -122,7 +128,7 @@ Player = Class:new({
 		end
 	end,
 	draw = function(_ENV)
-		if flr(hitstun / 3) % 2 == 0 then
+		if flr(invulnerable / 3) % 2 == 0 then
 			spr(1, x - 4, y - 4)
 		end
 
@@ -132,6 +138,23 @@ Player = Class:new({
 
 		if grappling and hook then
 			line(x, y - 8, hook.x, hook.y, 7)
+		end
+		if throwing then
+			local throw_power = 1 * 3 + throwing/100
+			local throw_angle = 0.125
+			throw_angle = facing == L and 0.5 - throw_angle or throw_angle
+			local xv = throw_power * cos(throw_angle)
+			local yv = throw_power * sin(throw_angle)
+			local tx = x
+			local ty = y - 8
+			for i=1,6 do
+				for j=1, 3 do
+					yv += gravity
+					tx += xv
+					ty += yv
+				end
+				circfill(tx, ty, 1, 8)
+			end
 		end
 	end,
 	fire_grapple = function(_ENV)
@@ -152,11 +175,13 @@ Player = Class:new({
 		}
 	end,
 	damage = function(_ENV)
+		if invulnerable > 0 then return end
 		local direction = 0.375
 		local magnitude = 5
 		x_velocity += cos(direction) * magnitude
 		y_velocity += sin(direction) * magnitude
 		hitstun = 10
+		invulnerable = 30
 	end,
 	apply_inputs = function(_ENV)
 		local speed = 1.5
@@ -176,12 +201,23 @@ Player = Class:new({
 			init_game(game_state % 2)
 		end
 
+
 		if false then
 			--add(particles, Particles:new({x=64, y=64, size=10 * 2, delta_size=-2, frames=10, sprite_id=64}))
 			local temp = stored_tile
 			stored_tile = grabbing
 			grabbing = temp
 			return
+		end
+
+		if btn(O) and btnp(U) and (grabbing != -1 or stored_tile != -1) then
+			local temp = stored_tile
+			stored_tile = grabbing
+			grabbing = temp	
+			if grappling then
+				grappling = false
+				hook = nil
+			end	
 		end
 
 		if btnp(O) then 
@@ -250,14 +286,25 @@ Player = Class:new({
 					grabbing = 16
 				end
 			elseif grabbing != -1 then
+				--normal_throw(_ENV)
+				throwing = 0
+			end
+		end
+
+		if throwing then
+			if btn(X) then
+				throwing = min(throwing + 10, 100)
+			else
 				normal_throw(_ENV)
+				throwing = nil
 			end
 		end
 	end,
 	normal_throw = function(_ENV)
-		local throw_power = 3
+		local throw_power = 1 * 3 + throwing/100
+		local throw_angle  = 0.125
 
-		spawn_thrown_tile(grabbing, x, y - 8, throw_power, facing == L and 0.375 or 0.125)
+		spawn_thrown_tile(grabbing, x, y - 8, throw_power, facing == L and 0.5 - throw_angle or throw_angle)
 		grabbing = -1
 		if grappling then
 			grappling = false

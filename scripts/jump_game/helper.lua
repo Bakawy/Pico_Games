@@ -6,6 +6,10 @@ function dist(x1, y1, x2, y2)
 	return sqrt((x2 - x1)^2 + (y2 - y1)^2)
 end
 
+function randint(low, high)
+	return flr(rnd(high+1-low))+low
+end
+
 function is_collide(x1, y1, x2, y2)
     return abs(x1 - x2) < 8 and abs(y1 - y2) < 8
 end
