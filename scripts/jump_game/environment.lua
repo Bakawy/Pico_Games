@@ -23,6 +23,7 @@ function copy_map(sx, sy, dx, dy, w, h)
 end
 
 function generate_level() --chunks must be on the same column
+	srand(seed..level)
 	local chunks = get_chunks()
 	local last_chunk = 0
 	copy_map(24, 16, 0, 0, 5, 16)
@@ -43,7 +44,26 @@ function generate_level() --chunks must be on the same column
 			end
 			break
 		end
+		for i=0,randint(0, min(7, end_x - (map_x + chunk.w))) do
+			mset(map_x, 0, 49)
+			mset(map_x, 15, 49)
+			map_x += 1
+		end
 		copy_map(chunk.x, chunk.y, map_x, 0, chunk.w, 16)
+		if rnd(1) < 0.5 then -- add block
+			local box_spots = {}
+			for x=map_x, map_x + chunk.w do
+				for y=1, 15 do
+					if mget(x, y) == 48 and mget(x, y - 1) == 0 then
+						add(box_spots, {x=x, y=y})
+					end
+				end
+			end
+			if #box_spots > 0 then
+				local spot = rnd(box_spots)
+				mset(spot.x, spot.y, 16)
+			end
+		end
 		map_x += chunk.w
 	end
 	copy_map(0, 16, map_x, 0, 8, 16)
@@ -83,6 +103,16 @@ end
 function draw_shop()
 	rect(103, 103, 120, 120, 4)
 	print("\#1\f4\-hstorage", 98, 96)
+	print("\#0\f7\-hseed: "..num_to_inputs(seed), 8, 66)
+
+	for sale in all(shop_sales) do
+		local id = mget(sale.x, sale.y)
+		local cx, cy = sale.x * 8 + 4, sale.y * 8 + 4
+		local text = ""..box_price_table[id]
+		local text_len = 4 * #text
+		print(text, cx - (text_len + 8)/2, cy - 12, 7)
+		spr(65, cx - (text_len + 8)/2 + 4 * #text, cy - 14)
+	end
 end
 
 function update_death_wall()
@@ -90,11 +120,23 @@ function update_death_wall()
 	death_wall.speed = min(death_wall.speed + death_wall.acceleration, death_wall.max_speed)
 	death_wall.x = min(death_wall.x + death_wall.speed, 976)
 
-	if player.x + 4 < death_wall.x then
-		run()
+	if player.invulnerable <= 0 then
+		if player.x - 4 < death_wall.x and player.health > 1 then
+			player:damage(0.2)
+			player.health -= 1
+			death_wall.acceleration = death_wall.max_speed/(60 * 3)
+			death_wall.speed *= 0.5
+			if player.x + 4 < death_wall.x then
+				player.x = death_wall.x - 4
+			end
+		elseif player.x + 4 < death_wall.x then
+			dset(0, flr(highscore))
+			run()
+		end
 	end
+
 	for enemy in all(enemies) do
-		if enemy.x + 4 < death_wall.x then
+		if enemy.x - 4 < death_wall.x then
 			enemy.dead = {1, -1}
 		end
 	end

@@ -16,9 +16,10 @@ function init_game(type)
 
 	gravity = 0.3
 	if player then 
-		player = Player:new({x=24, y=119, grabbing=player.grabbing, stored_tile=player.stored_tile})
+		player.x = 24
+		player.y = 116
 	else
-		player = Player:new({x=24, y=119})
+		player = Player:new({x=24, y=116})
 	end
 	game_state = type + 1
 	thrown_tiles = {}
@@ -32,10 +33,10 @@ function init_game(type)
 		generate_level()
 		spawn_enemies()
 
-		local max_speed = 1.25
+		local max_speed = min(1.15 + (0.02 * level), 1.5)
 		local ease_time = 12 --in seconds
 		death_wall = {
-			x = 0,
+			x = -16,
 			speed = 0,
 			acceleration = max_speed/(60*ease_time),
 			max_speed = max_speed
@@ -44,7 +45,12 @@ function init_game(type)
 		level += 1
 		update_score()
 		copy_map(8, 16, 0, 0, 16, 16)
-		mset(7, 14, randint(17, 26))
+		mset(6, 14, randint(17, 28))
+		mset(9, 14, randint(17, 28))
+		shop_sales = {
+			{x=6, y=14},
+			{x=9, y=14},
+		}
 	end
 end
 
@@ -72,8 +78,27 @@ function draw_hud()
 	--score
 	local text = "score: "..flr(score)
 	print("\#7\f0\-h"..text, 128 - 4 * #text - 1, 13)
+	--health
+	text = "hp: "..player.health
+	print("\#7\f0\-h"..text, 128 - 4 * #text - 1, 20)
+	--money
+	text = ""..player.money
+	rectfill(106 - #text * 4, 2, 116, 11, 7)
+	spr(65, 108, 3)
+	print(text, 107 - #text * 4, 5, 0)
+	--deathwall indicator
+	if death_wall then
+		if death_wall.x < screen_left then
+			circfill(16, 64, 7, 8)
+			spr(114, 5, 57)
+			spr(114, 5, 64, 1, 1, false, true)
+			local text = ""..flr(screen_left - death_wall.x)
+			print(text, 16 - 2 * #text + 1, 62, 7)
+		end
+	end
 end
 
 function update_score()
 	score = max(1024 * level + screen_left, score)
+	highscore = max(score, highscore)
 end

@@ -1,6 +1,7 @@
 _G = _ENV
 function _init()
-	poke(0x5f5c, 255) 
+	poke(0x5f5c, 255)
+	cartdata("jump_game") 
 	U=2
     D=3
     L=0
@@ -10,7 +11,12 @@ function _init()
 	water_tile_radius = 24
 	screen_left = 0
 	score = 0
+	highscore = dget(0)
 	level = 0
+	seed = ""
+	for i=1,8 do
+		seed ..= tostr(randint(0,5))
+	end
 
 	init_menu()
 	

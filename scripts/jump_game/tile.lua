@@ -1,3 +1,17 @@
+box_price_table = {
+	[17] = 2,
+	[18] = 2,
+	[19] = 2,
+	[20] = 2,
+	[21] = 2,
+	[22] = 2,
+	[23] = 2,
+	[24] = 2,
+	[25] = 2,
+	[26] = 2,
+	[27] = 2,
+	[28] = 2,
+}
 function normal_hit_floor(self)
 	self.y_velocity = 0
 	local tx, ty = coordinate_to_tile(self.x, self.y)
@@ -6,11 +20,6 @@ function normal_hit_floor(self)
 	if not fget(mget(tx, ty + 1), 0) then tx = tx2 end
 	place_tile(tx, ty, self.id)
 	self.dead = true
-end
-
-function bomb_hit_floor(self)
-	self.dead = true
-	explode(self.x, self.y, self.explosion_size)
 end
 
 function spring_hit_floor(self)
@@ -34,7 +43,7 @@ function vine_hit_floor(self)
 	local dir = nearest_axis(self.x) -- -1 left, +1 right
 	local tx2 = coordinate_to_tile(self.x + dir*tile_size, self.y)
 	if not fget(mget(tx, ty + 1), 0) then tx = tx2 end
-	place_tile(tx, ty, 51)
+	place_tile(tx, ty, game_state == 2 and 23 or 51)
 
 	for i=ty-1,0,-1 do
 		local id=mget(tx, i)
@@ -55,6 +64,16 @@ function clone_hit_floor(self)
 	self.target_cd = 0
 end
 
+function lootbox_hit_floor(self)
+	if not self.from_player then
+		normal_hit_floor(self)
+		return
+	end
+	self.dead = true
+	spawn_thrown_tile(randint(17, 28), self.x, self.y, 1.5, 0.125, false)
+	spawn_thrown_tile(randint(17, 28), self.x, self.y, 1.5, 0.375, false)
+end
+
 function normal_hit_wall(self)
 	self.x_velocity = 0
 end
@@ -71,6 +90,11 @@ end
 function bomb_hit_wall(self)
 	explode(self.x, self.y, self.explosion_size)
 	self.dead = true
+	if game_state == 2 then 
+		local mx, my = coordinate_to_tile(self.x, self.y)
+		place_tile(mx, my, self.id)
+		update_map_tile(mx, my)
+	end
 end
 
 function normal_hit_ceiling(self)
@@ -93,7 +117,7 @@ function water_effect(self)
 end
 
 function lasso_effect(self)
-	if not self.from_player then return end
+	if self.move == normal_move then return end
 	line(player.x, player.y, self.x, self.y, 4)
 end
 
@@ -202,6 +226,11 @@ function clone_move(self)
 	life -= 20/1200
 	if life <= 0 then 
 		dead = true
+		if game_state == 2 then 
+			local mx, my = coordinate_to_tile(self.x, self.y)
+			place_tile(mx, my, self.id)
+			update_map_tile(mx, my)
+		end
 		return
 	end
 	if abs(target_x - x) > 2 then
@@ -259,7 +288,7 @@ Tile = Class:new({
 	hit_ceiling=normal_hit_ceiling,
 })
 tile_behaviors = {
-    [17] = {hit_floor=bomb_hit_floor, explosion_size=20, hit_wall=bomb_hit_wall},
+    [17] = {hit_floor=bomb_hit_wall, explosion_size=20, hit_wall=bomb_hit_wall, hit_ceiling=bomb_hit_wall},
 	[19] = {hit_floor=spring_hit_floor},
 	[20] = {hit_wall=sticky_hit_wall, hit_ceiling=sticky_hit_ceiling},
 	[22] = {hit_floor=dash_hit_floor, hit_wall=sticky_hit_wall},
@@ -267,6 +296,7 @@ tile_behaviors = {
 	[24] = {draw_effect=water_effect},
 	[25] = {move=lasso_move, draw_effect=lasso_effect},
 	[26] = {hit_floor=clone_hit_floor},
+	[27] = {hit_floor=lootbox_hit_floor},
 }
 
 function spawn_thrown_tile(id, x, y, velocity, direction, from_player)
@@ -398,8 +428,16 @@ function nearest_axis(p) return (p%8>=4) and 1 or -1 end
 
 function place_tile(x, y, id)
 	if y > 15 then return end
+	if game_state == 2 then
+		for sale in all(shop_sales) do
+			if x == sale.x and y == sale.y then
+				return
+			end
+		end
+	end
+
 	local cx, cy = x * 8 + 4, y * 8 + 4
-	if fget(mget(x, y), 5) and id != 0 then
+	if fget(mget(x, y), 5) and id != 0 and mget(x, y) != id then
 		spawn_thrown_tile(id, cx, cy, 2, rnd(0.5), false)
 	else
 		mset(x, y, id)

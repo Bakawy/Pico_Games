@@ -179,10 +179,10 @@ function is_anchored(tx, ty, dir)
 		if dir ~= "d" then if fget(mget(tx, ty + 1), 3) and fget(mget(tx, ty + 1), 0) then return true end end
 		if dir ~= "u" then if fget(mget(tx, ty - 1), 3) and fget(mget(tx, ty - 1), 0) then return true end end
 	end
-	if dir ~= "r" then if is_anchored(tx + 1, ty, "l") then return true end end
-	if dir ~= "l" then if is_anchored(tx - 1, ty, "r") then return true end end
+	--if dir ~= "r" then if is_anchored(tx + 1, ty, "l") then return true end end
+	--if dir ~= "l" then if is_anchored(tx - 1, ty, "r") then return true end end
 	if dir ~= "d" then if is_anchored(tx, ty + 1, "u") then return true end end
-	if dir ~= "u" then if is_anchored(tx, ty - 1, "d") then return true end end
+	--if dir ~= "u" then if is_anchored(tx, ty - 1, "d") then return true end end
 	return false
 end
 
@@ -226,4 +226,21 @@ function run_tasks()
       assert(ok, err) -- surfaces errors from inside the coroutine
     end
   end
+end
+
+function num_to_inputs(num)
+	local output = ""
+	local input_table = {
+		[0] = "⬅️",
+		[1] = "➡️",
+		[2] = "⬆️",
+		[3] = "⬇️",
+		[4] = "🅾️",
+		[5] = "❎",
+	}
+	for i=1,#num do
+    	char = sub(num, i, i)
+    	output ..= input_table[tonum(char)]
+	end
+	return output
 end

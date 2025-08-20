@@ -1,6 +1,6 @@
 function init_menu()
-	menu_items = {"play", "shop"}
-    menu_text = {}
+	menu_items = {"play", "shop", "seed"}
+    menu_text = {"highscore: "..highscore}
     camera()
     selected = 1
     disableinput = 30
@@ -8,7 +8,17 @@ function init_menu()
 end
 
 function update_menu()
-    if disableinput > 0 then disableinput -= 1 end
+    if selected == "seed input" then
+        for i=0, 5 do
+            if btnp(i) then
+                seed ..= i
+                break
+            end
+        end
+        if #seed >= 8 then selected = 1 end
+        return
+    end
+
     if btnp(2) then -- up
         selected -= 1
     elseif btnp(3) then -- down
@@ -18,11 +28,14 @@ function update_menu()
     if selected < 1 then selected = #menu_items end
     if selected > #menu_items then selected = 1 end
 
-    if (btnp(4) or btnp(5)) and disableinput <= 0 then
+    if (btnp(4) or btnp(5)) then
         if menu_items[selected] == "play" then
             init_game(0)
         elseif menu_items[selected] == "shop" then
             init_game(1)
+        elseif menu_items[selected] == "seed" then
+            selected = "seed input"
+            seed = ""
         end
     end
 end
@@ -33,6 +46,9 @@ function draw_menu()
     end
 
     for i, item in ipairs(menu_items) do
+        if item == "seed" then 
+            item = "seed: "..num_to_inputs(seed)
+        end
         local y = 30 + i * 10
         local x = 32
         if i == selected then

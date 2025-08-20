@@ -29,7 +29,7 @@ Enemy = Class:new({
 		for tile in all(thrown_tiles) do
 			if is_collide(x, y, tile.x, tile.y) then
 			local direction = atan2(x - tile.x, -abs(y - tile.y))
-			dead = {cos(direction), sin(direction)}
+			dead = {cos(direction), sin(direction), tile.from_player}
 
 			if tile.id == 25 and tile.from_player then
 				dead = "dont show"
@@ -80,6 +80,19 @@ function move_enemies()
 					sprite_id=e.id + 16,
 				}))
 			end
+
+			if e.dead[3] or e.dead == "dont show" then
+				player.money += 1
+				add(particles, Particles:new({
+					x=e.x, 
+					y=e.y,
+					y_velocity=-2,
+					y_acceleration=2/15,
+					frames=15,
+					sprite_id=65,
+				}))
+			end
+
 			deli(enemies, i) 
 		end
 	end

@@ -15,6 +15,8 @@ Player = Class:new({
 	stored_tile = -1,
 	status = {}, --speed: speed multiplier,
 	throwing = nil,
+	health = 3,
+	money = 0,
 	move = function(_ENV)	
 		local frict = 1.5
 		local max_cayote_time = 5
@@ -140,7 +142,7 @@ Player = Class:new({
 			line(x, y - 8, hook.x, hook.y, 7)
 		end
 		if throwing then
-			local throw_power = 1 * 3 + throwing/100
+			local throw_power = 2 + 2 * throwing/100
 			local throw_angle = 0.125
 			throw_angle = facing == L and 0.5 - throw_angle or throw_angle
 			local xv = throw_power * cos(throw_angle)
@@ -174,10 +176,10 @@ Player = Class:new({
 			attached = false
 		}
 	end,
-	damage = function(_ENV)
+	damage = function(_ENV, direction, magnitude)
 		if invulnerable > 0 then return end
-		local direction = 0.375
-		local magnitude = 5
+		direction = direction and direction or 0.375
+		magnitude = magnitude and magnitude or 5
 		x_velocity += cos(direction) * magnitude
 		y_velocity += sin(direction) * magnitude
 		hitstun = 10
@@ -263,8 +265,26 @@ Player = Class:new({
 					grabbing=tile_id
 					update_surrounding(tx,ty)
 				end
+				
+				if game_state == 2 then
+					for sale in all(shop_sales) do
+						if sale.x == tx and sale.y == ty then
+							if money >= box_price_table[grabbing] then
+								money -= box_price_table[grabbing]
+								del(shop_sales, sale)
+							else
+								mset(tx,ty,grabbing)
+								grabbing = -1
+							end
+						end
+					end
+				end
 			elseif btn(D) and grabbing != -1 then
-				spawn_thrown_tile(grabbing, x, y - 8, 1, 0.75, false)
+				spawn_thrown_tile(grabbing, x, y - 8, 1, 0.75)
+				if grabbing == 25 then
+					thrown_tiles[#thrown_tiles].move = normal_move
+				end
+
 				y_velocity = - jump_strength * (grabbing == 19 and 1.25 or 1)
 				grabbing = -1
 				if grappling then
@@ -275,7 +295,7 @@ Player = Class:new({
 				if grabbing == 18 then
 					if not hook then
 						fire_grapple(_ENV)
-						grabbing = 16
+						if game_state != 2 then grabbing = 16 end
 					else
 						grappling = false
 						hook = nil
@@ -283,6 +303,9 @@ Player = Class:new({
 				elseif grabbing == 22 then
 					local speed = 15
 					x_velocity += speed * (facing == R and 1 or -1)
+					if game_state != 2 then grabbing = 16 end
+				elseif grabbing == 28 then
+					health += 1
 					grabbing = 16
 				end
 			elseif grabbing != -1 then
@@ -301,7 +324,7 @@ Player = Class:new({
 		end
 	end,
 	normal_throw = function(_ENV)
-		local throw_power = 1 * 3 + throwing/100
+		local throw_power = 2 + 2 * throwing/100
 		local throw_angle  = 0.125
 
 		spawn_thrown_tile(grabbing, x, y - 8, throw_power, facing == L and 0.5 - throw_angle or throw_angle)
