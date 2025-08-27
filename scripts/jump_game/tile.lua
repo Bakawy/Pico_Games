@@ -74,10 +74,6 @@ function lootbox_hit_floor(self)
 	spawn_thrown_tile(randint(17, 28), self.x, self.y, 1.5, 0.375, false)
 end
 
-function normal_hit_wall(self)
-	self.x_velocity = 0
-end
-
 function sticky_hit_wall(self) --also used for dash
 	local tx, ty = coordinate_to_tile(self.x, self.y)
 	local dir = nearest_axis(self.y) -- -1 left, +1 right
@@ -95,10 +91,6 @@ function bomb_hit_wall(self)
 		place_tile(mx, my, self.id)
 		update_map_tile(mx, my)
 	end
-end
-
-function normal_hit_ceiling(self)
-	self.y_velocity = 0
 end
 
 function sticky_hit_ceiling(self)
@@ -142,7 +134,7 @@ function normal_move(self)
 	end
 
 	local collided = false
-	y, _, collided = move_y(x, y, y_velocity)
+	y, _, collided = sweep_move_y(x, y, y_velocity)
 
 	if y_velocity > 0 and collided then
 		local tx, ty = coordinate_to_tile(x, y)
@@ -168,7 +160,7 @@ function normal_move(self)
 	end
 
 	collided = false
-	x, _, collided = move_x(x, y, x_velocity)
+	x, _, collided = sweep_move_x(x, y, x_velocity)
 
 	if collided then
 		local tx, ty = coordinate_to_tile(x, y)
@@ -242,10 +234,10 @@ function clone_move(self)
 	y_velocity += gravity
 
 
-	x, x_velocity = move_x(x, y, x_velocity)
+	x, x_velocity = sweep_move_x(x, y, x_velocity)
 
 	local old_yv = y_velocity
-	y, y_velocity, collided = move_y(x, y, y_velocity)
+	y, y_velocity, collided = sweep_move_y(x, y, y_velocity)
 	grounded = false
 	if old_yv > 0 and collided then
 		grounded = true
@@ -284,8 +276,12 @@ Tile = Class:new({
 	draw=normal_draw,
 	draw_effect=function()end,
 	hit_floor=normal_hit_floor,
-	hit_wall=normal_hit_wall,
-	hit_ceiling=normal_hit_ceiling,
+	hit_wall=function(self)
+		x_velocity = 0
+	end,
+	hit_ceiling=function(self)
+		y_velocity = 0
+	end,
 })
 tile_behaviors = {
     [17] = {hit_floor=bomb_hit_wall, explosion_size=20, hit_wall=bomb_hit_wall, hit_ceiling=bomb_hit_wall},
@@ -326,8 +322,10 @@ end
 
 function move_tiles()
 	for tile in all(thrown_tiles) do
+		if tile.dead then del(thrown_tiles, tile)
+		else
 		tile:move()
-		if tile.dead then del(thrown_tiles, tile) end
+		if tile.dead then del(thrown_tiles, tile) end end
 	end
 end
 
@@ -378,7 +376,7 @@ function explode(x, y, radius)
 	for enemy in all(enemies) do
 		if dist(enemy.x, enemy.y, x, y) < radius then
 			local direction = atan2(enemy.x - x, -abs(enemy.y - y))
-			enemy.dead = {cos(direction), sin(direction)}
+			enemy.dead = {direction, false, true}
 		end
 	end
 

@@ -3,7 +3,14 @@ function coordinate_to_tile(x, y)
 end
 
 function dist(x1, y1, x2, y2)
-	return sqrt((x2 - x1)^2 + (y2 - y1)^2)
+    local dx = abs(x2 - x1)
+    local dy = abs(y2 - y1)
+    
+    if dx > 100 or dy > 100 then
+        return dx + dy
+    else
+        return sqrt(dx*dx + dy*dy)
+    end
 end
 
 function randint(low, high)
@@ -36,12 +43,12 @@ function get_tiles_in_radius(cx, cy, radius)
 end
 
 function in_list(val, list)
-    for item in all(list) do
-        if item == val then
-            return true
-        end
-    end
-    return false
+    --for item in all(list) do
+    --    if item == val then
+    --        return true
+    --    end
+    --end
+    return count(list, val) != 0
 end
 
 tile_size = 8
@@ -80,7 +87,7 @@ function solid_side(x,y,dir)
       or check_tile_stat(x+off, y,   0)
       or check_tile_stat(x+off, y+3, 0)
 end
-
+--[[
 function simple_move_y(x,y,vy)
 	local new_y = y + vy
 	local collided = false
@@ -96,6 +103,23 @@ function simple_move_y(x,y,vy)
 	end
 	return y, vy, collided
 end
+
+function simple_move_x(x,y,vx)
+	local new_x = x + vx
+	local collided = false
+	if vx != 0 then
+		local offset = vx > 0 and 4 or -4
+		if solid_side(new_x, y, sgn(vx)) then
+			x = snap_edge(new_x, sgn(vx))
+			vx = 0
+			collided = true
+		else
+			x = new_x
+		end
+	end
+	return x, vx, collided
+end
+]]
 
 function sweep_move_y(x,y,vy)
 	local rem = vy
@@ -127,22 +151,6 @@ function sweep_move_y(x,y,vy)
 		end
 	end
 	return y, vy, collided
-end
-
-function simple_move_x(x,y,vx)
-	local new_x = x + vx
-	local collided = false
-	if vx != 0 then
-		local offset = vx > 0 and 4 or -4
-		if solid_side(new_x, y, sgn(vx)) then
-			x = snap_edge(new_x, sgn(vx))
-			vx = 0
-			collided = true
-		else
-			x = new_x
-		end
-	end
-	return x, vx, collided
 end
 
 function sweep_move_x(x,y,vx)
@@ -190,6 +198,7 @@ function on_ground(x,y)
  return check_tile_stat(x-3,y+5,0) or check_tile_stat(x,y+5,0) or check_tile_stat(x+3,y+5,0)
 end
 
+--[[
 function move_y(x,y,vy)
 	if abs(vy)<speed_sweep_threshold then
 		return simple_move_y(x,y,vy)
@@ -204,7 +213,7 @@ function move_x(x,y,vx)
   		return sweep_move_x(x,y,vx)
 	 end
 end
-
+]]
 local _yield = yield
 
 tasks = {}

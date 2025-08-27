@@ -1,5 +1,5 @@
 function init_menu()
-	menu_items = {"play", "shop", "seed"}
+	menu_items = {"play", "shop", "seed", "reset save data"}
     menu_text = {"highscore: "..highscore}
     camera()
     selected = 1
@@ -36,6 +36,9 @@ function update_menu()
         elseif menu_items[selected] == "seed" then
             selected = "seed input"
             seed = ""
+        elseif menu_items[selected] == "reset save data" then
+			dset(0, 0)
+			run()
         end
     end
 end

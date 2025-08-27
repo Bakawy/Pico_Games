@@ -25,26 +25,27 @@ end
 function generate_level() --chunks must be on the same column
 	srand(seed..level)
 	local chunks = get_chunks()
-	local last_chunk = 0
 	copy_map(24, 16, 0, 0, 5, 16)
 	local map_x = 4
 	local end_x = 127 - 8
+	local added_hider = false
+	local added_special_box = false
 	while map_x < end_x do
-		local chunk = 0
-		while chunk == last_chunk or chunk == 0 do chunk = rnd(chunks) end
-		last_chunk = chunk
+		local chunk = rnd(chunks)
+		del(chunks, chunk)
+		if #chunks <= 2 then chunks = get_chunks() end
 		if map_x + chunk.w >= end_x then 
 			for i=0, end_x - map_x - 1 do
 				mset(map_x, 0, 49)
 				mset(map_x, 15, 49)
 				if i == end_x - map_x - 1 then
-					mset(map_x, 14, 80)
+					mset(map_x, 14, 115)
 				end
 				map_x += 1
 			end
 			break
 		end
-		for i=0,randint(0, min(7, end_x - (map_x + chunk.w))) do
+		for i=0,randint(0, min(3, end_x - (map_x + chunk.w))) do
 			mset(map_x, 0, 49)
 			mset(map_x, 15, 49)
 			map_x += 1
@@ -62,6 +63,36 @@ function generate_level() --chunks must be on the same column
 			if #box_spots > 0 then
 				local spot = rnd(box_spots)
 				mset(spot.x, spot.y, 16)
+			end
+		end
+		if rnd(1) < 1/3 and not added_hider then -- add hider
+			local hider_spots = {}
+			for x=map_x, map_x + chunk.w do
+				for y=1, 15 do
+					if mget(x, y) == 48 and fget(mget(x, y + 1), 0) and fget(mget(x, y - 1), 0) then
+						add(hider_spots, {x=x, y=y})
+					end
+				end
+			end
+			if #hider_spots > 0 then
+				local spot = rnd(hider_spots)
+				mset(spot.x, spot.y, 85)
+				added_hider = true
+			end
+		end
+		if rnd(1) < 0.1 and not added_special_box then --add special box
+			local box_spots = {}
+			for x=map_x, map_x + chunk.w do
+				for y=1, 15 do
+					if mget(x, y) == 16 then
+						add(box_spots, {x=x, y=y})
+					end
+				end
+			end
+			if #box_spots > 0 then
+				local spot = rnd(box_spots)
+				mset(spot.x, spot.y, randint(17, 28))
+				added_special_box = true
 			end
 		end
 		map_x += chunk.w
@@ -137,11 +168,20 @@ function update_death_wall()
 
 	for enemy in all(enemies) do
 		if enemy.x - 4 < death_wall.x then
-			enemy.dead = {1, -1}
+			if enemy.id == 86 and enemy.state == 1 then
+				enemy.state = 0
+				enemy.progress = 0
+				enemy.x += 32
+			else
+				enemy.dead = {0.125}
+			end
 		end
 	end
 end
 
 function draw_death_wall()
 	rectfill(0, 0, death_wall.x, 128, 8)
+	if player.x < death_wall.x then
+		rrect(player.x - 4, player.y - 4, 8, 8, 1, 7)
+	end
 end

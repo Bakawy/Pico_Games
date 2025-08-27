@@ -33,8 +33,8 @@ function init_game(type)
 		generate_level()
 		spawn_enemies()
 
-		local max_speed = min(1.15 + (0.02 * level), 1.5)
-		local ease_time = 12 --in seconds
+		local max_speed = min(1.15 + (0.03 * level), 1.5)
+		local ease_time = max(12 - 3 * level, 2) --in seconds
 		death_wall = {
 			x = -16,
 			speed = 0,
@@ -59,9 +59,8 @@ function draw_debug()
 	print(flr(stat(1)*100).."% ram", 0, 0, 2)
 	
 	if game_state == 1 then
-		print(screen_left)
-		print(player.invulnerable)
-		print(player.hitstun)
+		print(count(player.status))
+		foreach(player.status, print)
 	end
 end
 

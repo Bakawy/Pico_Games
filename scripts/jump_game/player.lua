@@ -13,7 +13,9 @@ Player = Class:new({
 	standing_on = {},
 	grounded = false,
 	stored_tile = -1,
-	status = {}, --speed: speed multiplier,
+	status = {
+		--speed = {length=1000, magnitude=1.5},
+	}, --speed: speed multiplier,
 	throwing = nil,
 	health = 3,
 	money = 0,
@@ -58,6 +60,7 @@ Player = Class:new({
 				end
 			elseif tile.id == 26 and tile.life then
 				if dist(x, y, tile.x, tile.y) < tile.life + sqrt(32) then
+					if grabbing == -1 then grabbing = 16 end
 					if stored_tile == -1 then stored_tile = 16 end
 				end
 			end
@@ -66,7 +69,7 @@ Player = Class:new({
 
 		local old_y_velocity = y_velocity
 		local collided = false
-		y, y_velocity, collided = move_y(x, y, y_velocity)
+		y, y_velocity, collided = sweep_move_y(x, y, y_velocity)
 
 		grounded = false
 		if old_y_velocity > 0 and collided then
@@ -77,14 +80,9 @@ Player = Class:new({
 			cayote_time = max_cayote_time
 		end
 
-		x, x_velocity = move_x(x, y, x_velocity)
+		x, x_velocity = sweep_move_x(x, y, x_velocity)
 		
-		for s in all(status) do
-			if s.length <= 0 then
-				del(status, s)
-			end
-			s.length -= 1
-		end
+		for i,s in pairs(status) do s.length-=1 if s.length<1 then status[i]=nil end end
 		if status.speed then frict *= status.speed.magnitude end
 		if hitstun <= 0 then
 			x_velocity = abs(x_velocity) < frict and 0 or x_velocity - sgn(x_velocity)*frict
@@ -105,7 +103,7 @@ Player = Class:new({
 		local dx = x - hook.x
 		local dy = y - hook.y
 		local dist = sqrt(dx*dx + dy*dy)
-		local rest_len = 40
+		local rest_len = 20
 
 		if dist > rest_len then
 			local stretch = dist - rest_len
@@ -114,12 +112,12 @@ Player = Class:new({
 
 			local tension = 0.05 
 
-			local angle = atan2(dy, dx)
-			local swing_force = gravity * sin(angle) 
+			local angle = atan2(dx, dy)
+			--local swing_force = gravity * sin(angle) 
 			--print(swing_force, 64, 64, 7)
 			--line(64, 64, 64 + swing_force * 30, 64, 2)
 			
-			local fx = -tension * stretch * nx - swing_force
+			local fx = -tension * stretch * nx --- swing_force
 			local fy = -tension * stretch * ny
 			local max_velocity = 5
 			fx = min(fx, max_velocity)
@@ -183,7 +181,7 @@ Player = Class:new({
 		x_velocity += cos(direction) * magnitude
 		y_velocity += sin(direction) * magnitude
 		hitstun = 10
-		invulnerable = 30
+		invulnerable = 25
 	end,
 	apply_inputs = function(_ENV)
 		local speed = 1.5
