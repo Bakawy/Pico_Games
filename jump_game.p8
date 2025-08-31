@@ -2,7 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
 --[[ core functions
-Sprite flags ⬅️⬆️⬇️➡️🅾️❎
+Sprite flags ⬅️⬇️⬆️➡️🅾️❎
 0 - solid
 1 - grabbable
 2 - unbreakable

@@ -135,6 +135,7 @@ function draw_shop()
 	rect(103, 103, 120, 120, 4)
 	print("\#1\f4\-hstorage", 98, 96)
 	print("\#0\f7\-hseed: "..num_to_inputs(seed), 8, 66)
+	print("pick up to buy", 9, 72, 7)
 
 	for sale in all(shop_sales) do
 		local id = mget(sale.x, sale.y)
@@ -164,6 +165,8 @@ function update_death_wall()
 			dset(0, flr(highscore))
 			run()
 		end
+	elseif player.x - 4 < death_wall.x then
+		player.x = death_wall.x + 4
 	end
 
 	for enemy in all(enemies) do

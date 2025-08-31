@@ -1,6 +1,13 @@
 function init_menu()
-	menu_items = {"play", "shop", "seed", "reset save data"}
-    menu_text = {"highscore: "..highscore}
+	menu_items = {"play", "seed", "reset save data"}
+    menu_text = {"highscore: "..highscore, 
+    "z to jump", 
+    "x to throw", 
+    "⬇️ + x ontop of a block to hold",
+    "⬆️ + z to pocket a block", 
+    "⬇️ + x to drop throw",
+    "⬆️ + x to activate block",
+    }
     camera()
     selected = 1
     disableinput = 30
@@ -45,14 +52,14 @@ end
 
 function draw_menu()
     for i, item in ipairs(menu_text) do
-        print(item, 0, i * 10, 7)
+        print(item, 0, i * 6 - 6, 7)
     end
 
     for i, item in ipairs(menu_items) do
         if item == "seed" then 
             item = "seed: "..num_to_inputs(seed)
         end
-        local y = 30 + i * 10
+        local y = 50 + i * 10
         local x = 32
         if i == selected then
             print("> "..item, x - 8, y, 11)

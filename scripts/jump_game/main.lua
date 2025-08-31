@@ -72,5 +72,5 @@ function _draw()
 		draw_particles()
 		draw_hud()
 	end
-	draw_debug()
+	--draw_debug()
 end
