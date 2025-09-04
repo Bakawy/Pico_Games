@@ -74,3 +74,4 @@ function ease(from, to, progress, funct)
     return from + (to - from) * funct(progress)
 end
 function easeOutQuad(x) return 1 - (1 - x) * (1 - x) end
+function easeInCubic(x) return x * x * x end

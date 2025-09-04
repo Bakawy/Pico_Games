@@ -9,6 +9,9 @@
             color: inherit;
         }
 
+        body {
+            font-family: 'Comic Sans MS';
+        }
 
         @media (prefers-color-scheme: dark) {
             body {
@@ -17,7 +20,6 @@
                 margin: 0;
                 padding: 0;
                 overflow-y: auto;
-                font-family: Arial, sans-serif;
             }
         }
 
@@ -28,7 +30,6 @@
                 margin: 0;
                 padding: 0;
                 overflow-y: auto;
-                font-family: Arial, sans-serif;
             }
         }
 
@@ -82,6 +83,18 @@
             border: none;
         }
 
+        .finished {
+            color: rgb(0, 255, 0);
+        }
+         
+        .wip {
+            color: rgb(88, 88, 255);
+        }
+
+        .abondoned {
+            color: rgb(255, 0, 0);
+        }
+
         @media (max-width: 768px) {
             .games-container {
                 grid-template-columns: 1fr;
@@ -96,52 +109,62 @@
     </style>
 </head>
 <body>
+    <p class="finished" style="display:inline;">Finished</p> 
+    <p class="wip" style="display:inline;">WIP</p>
+    <p class="abondoned" style="display:inline;">Unfinished</p>
     <div class="games-container">
         <div class="game-wrapper">
-            <div class="game-title">Pong</div>
+            <div class="game-title finished">Pong</div>
             <div class="game-iframe">
                 <iframe src="pages/pong.html" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
         <div class="game-wrapper">
-            <div class="game-title">Shooty Game</div>
+            <div class="game-title abondoned">Shooty Game</div>
             <div class="game-iframe">
                 <iframe src="pages/shooty_game.html" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
         <div class="game-wrapper">
-            <div class="game-title">Beat Game</div>
+            <div class="game-title finished">Beat Game</div>
             <div class="game-iframe">
                 <iframe src="pages/beat_game.html" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
         <div class="game-wrapper">
-            <div class="game-title">Jump Game</div>
+            <div class="game-title finished">Jump Game</div>
             <div class="game-iframe">
                 <iframe src="pages/jump_game.html" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
         <div class="game-wrapper">
-            <a href="file.p8" download>
-                <div class="game-title">Punch Game</div>
-            </a>
+            <div class="game-title wip">Punch Game</div>
             <div class="game-iframe">
                 <iframe src="pages/punch_game.html" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="game-wrapper">
+            <div class="game-title finished">3D Test</div>
+            <div class="game-iframe">
+                <iframe src="pages/3d_test.html" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="game-wrapper">
+            <div class="game-title wip">Space Game</div>
+            <div class="game-iframe">
+                <iframe src="pages/space_game.html" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
         <!-- Template -->
         <!--
         <div class="game-wrapper">
-            <a href="file.p8" download>
-                <div class="game-title">Title</div>
-            </a>
+            <div class="game-title">Title</div>
             <div class="game-iframe">
                 <iframe src="pages/game.html" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
         -->
     </div>
-
     <script>
         // Apply dark/light mode class to game titles
         document.addEventListener('DOMContentLoaded', function() {

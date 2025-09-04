@@ -121,7 +121,7 @@ function simple_move_x(x,y,vx)
 end
 ]]
 
-function sweep_move_y(x,y,vy)
+function move_y(x,y,vy)
 	local rem = vy
 	local collided = false
 	while rem ~= 0 do
@@ -153,7 +153,7 @@ function sweep_move_y(x,y,vy)
 	return y, vy, collided
 end
 
-function sweep_move_x(x,y,vx)
+function move_x(x,y,vx)
 	local rem = vx
 	local collided = false
 	while rem ~= 0 do
