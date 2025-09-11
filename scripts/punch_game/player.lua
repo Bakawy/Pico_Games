@@ -8,7 +8,7 @@ local playerState = {
 }
 local centerX, centerY = 64, 115
 local radius = 30
-local outerColor = 0
+local outerColor = 3
 local innerColor = 7
 local gloveRadius = 7
 
@@ -17,6 +17,10 @@ local function punch()
     playerState.progress = 0
     playerState.duration = 15
     playerState.facing = not playerState.facing
+    local blockLow, blockHigh = getEnemyBlock()
+    if (playerState.punchHigh and not blockHigh) or (not playerState.punchHigh and not blockLow) then
+        hurtEnemy()
+    end
 end
 
 local function dodge()
@@ -27,8 +31,8 @@ end
 
 local function drawArm(p1, p2, p3)
     drawCurve(p1, p2, p3, outerColor, 1.5)
-    circfill(p3.x, p3.y, gloveRadius, 4)
-    circfill(p3.x, p3.y, gloveRadius * 4/5, 8)
+    circfill(p3.x, p3.y, gloveRadius, 5)
+    circfill(p3.x, p3.y, gloveRadius * 4/5, 9)
 end
 
 local function drawIdle()
@@ -44,21 +48,22 @@ end
 local function drawPunch()
     local progress = playerState.progress / playerState.duration
     local cy = ease(centerY - 16, centerY + 5, progress, easeOutQuad)
-    local handHeight = playerState.punchHigh and 32 or 16
-    local handY = ease(48 - (handHeight - 16), cy - handHeight, progress, easeOutQuad)
+    local restHandHeight = playerState.punchHigh and 32 or 16
+    local handHeight = playerState.punchHigh and 80 or 52
+    local handY = ease(128 - handHeight, cy - restHandHeight, progress, easeOutQuad)
     local elbowY = ease((handY + cy) / 2, cy, progress, easeOutQuad)
     if playerState.facing then
         local handX = ease(48, centerX - radius, progress, easeOutQuad)
         local elbowX = ease((handX + (centerX - radius - 16)) / 2, centerX - radius - 16, progress, easeOutQuad)
         drawArm({x=centerX - radius, y=cy}, {x=elbowX, y=elbowY}, {x=handX, y=handY})
 
-        drawArm({x=centerX + radius, y=cy}, {x=centerX + radius + 16, y=cy}, {x=centerX + radius, y=cy - handHeight})
+        drawArm({x=centerX + radius, y=cy}, {x=centerX + radius + 16, y=cy}, {x=centerX + radius, y=cy - restHandHeight})
     else
         local handX = ease(80, centerX + radius, progress, easeOutQuad)
         local elbowX = ease((handX + (centerX + radius + 16)) / 2, centerX + radius + 16, progress, easeOutQuad)
         drawArm({x=centerX + radius, y=cy}, {x=elbowX, y=elbowY}, {x=handX, y=handY})
 
-        drawArm({x=centerX - radius, y=cy}, {x=centerX - radius - 16, y=cy}, {x=centerX - radius, y=cy - handHeight})
+        drawArm({x=centerX - radius, y=cy}, {x=centerX - radius - 16, y=cy}, {x=centerX - radius, y=cy - restHandHeight})
     end
     circfill(centerX, cy, radius, outerColor)
     circfill(centerX, cy, radius - 3, innerColor)
