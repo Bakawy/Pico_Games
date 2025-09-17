@@ -8,7 +8,7 @@
       "runtimeExecutable": "/Applications/PICO-8.app/Contents/MacOS/pico8",
       "args": [
         "-run",
-        "${workspaceFolder}/punch_game.p8"
+        "${workspaceFolder}/sword_game.p8"
       ]
     }
   ]

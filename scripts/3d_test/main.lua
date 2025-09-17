@@ -1,5 +1,6 @@
 draw3d = false
 INFINITY = 32767
+frame = 0
 
 function _init()
     updateVision()
@@ -14,6 +15,7 @@ end
 function _update60()
     cls(0)
     updatePlayer()
+    frame += 1
 end
 
 function _draw()

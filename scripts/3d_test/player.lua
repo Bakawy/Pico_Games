@@ -6,6 +6,7 @@ local size = 4
 local lookAngle = 0.25
 local fov = 0.25
 local rays = {}
+local rayDiv = 2
 local tileColorTable = { 
     [1]=9,
     [2]=10,
@@ -71,7 +72,7 @@ end
 
 function updateVision()
     local angle = lookAngle - fov/2
-    local angleStep = fov / 64
+    local angleStep = fov / (128/rayDiv)--64
     rays = {}
 
     while angle < lookAngle + fov/2 do
@@ -134,6 +135,7 @@ function updatePlayer()
     end
     if btn(4) then
         fov = (fov + 0.01) % 0.5
+        --rayDiv = ((rayDiv + 0.05) % 20) + 1
         doUpdateVision = true
     end
 
@@ -159,6 +161,7 @@ function draw3dView()
     local wallHeight = 40
     local sliceWidth = screenWidth / #rays
 
+    --[[
     for i=1,#rays do
         if rays[i].position == nil then
             rays[i].position = i
@@ -175,21 +178,22 @@ function draw3dView()
             end
         end
     end
-
+    ]]
     for i=1,#rays do
         local ray = rays[i]
         local alpha = ray.angle - lookAngle
         local d_perp = ray.distance * cos(alpha)
         local d_proj = (screenWidth / 2) / tan(fov/2)
         local sliceHeight = (d_proj * wallHeight) / max(d_perp, 0.001)
-        local x0 = (ray.position-1) * sliceWidth
-        local x1 = x0 + sliceWidth
+        local x0 = (i-1) * sliceWidth + frame%rayDiv
+        --local x1 = x0 + sliceWidth
         local y0 = (screenHeight / 2) - (sliceHeight / 2)
         local y1 = y0 + sliceHeight
         local color = 13
         if (ray.distance > 32) color -= 4
         if (ray.distance > 64) color -= 4
         if (ray.distance > 112) color -= 4
-        rectfill(x0, y0, x1, y1, color)
+        --rectfill(x0, y0, x1, y1, color)
+        line(x0, y0, x0, y1, color)
     end
 end

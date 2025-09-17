@@ -1,29 +1,3 @@
-local function control_for_mid(s, m, e)
-    return {
-        x = 2*m.x - 0.5*(s.x + e.x),
-        y = 2*m.y - 0.5*(s.y + e.y)
-    }
-end
-
-local function qbez_point(s, c, e, t)
-    local ax = s.x + (c.x - s.x)*t
-    local ay = s.y + (c.y - s.y)*t
-    local bx = c.x + (e.x - c.x)*t
-    local by = c.y + (e.y - c.y)*t
-    return ax + (bx - ax)*t, ay + (by - ay)*t
-end
-
-function drawCurve(s, m, e, col, w)
-    local c = control_for_mid(s, m, e)
-    local step = 0.1
-    local lastx, lasty = s.x, s.y
-    for t=step,1,step do
-        local x, y = qbez_point(s, c, e, t)
-        linefill(lastx, lasty, x, y, w, col)
-        lastx, lasty = x, y
-    end
-end
-
 function linefill(ax,ay,bx,by,r,c)
     --function by https://www.lexaloffle.com/bbs/?pid=80095
     if r <= 1 then
@@ -69,10 +43,32 @@ function linefill(ax,ay,bx,by,r,c)
     end
 end
 
-function ease(from, to, progress, funct)
-    return from + (to - from) * funct(progress)
+function rspr(sx,sy,sw,sh,a,dx,dy,dw,dh)
+    local sx,sy,sw,sh,a,dx,dy,dw,dh=
+        sx or 0, sy or 0,
+        sw or 8, sh or 8,
+        a or 0,
+        dx or 0, dy or 0,
+        dw or 8, dh or 8
+   
+    local s1,c1 = sin(a+0+0.125),cos(a+0+0.125)
+    local half_dw,half_dh = dw/2,dh/2
+    local x1,y1 = half_dw*c1,half_dh*s1
+    local x2,y2 = half_dw*s1,half_dh*-c1
+    local x3,y3 = half_dw*-c1,half_dh*-s1
+    local x4,y4 = half_dw*-s1,half_dh*c1
+   
+    for y=0,dh-1 do
+        local ty = y/dh
+        local stx,sty = x2+(x3-x2)*ty,y2+(y3-y2)*ty
+        local enx,eny = x1+(x4-x1)*ty,y1+(y4-y1)*ty
+        for x=0,dw-1 do
+            local tx = x/dw
+            local col = sget(sx+sw*tx,sy+sh*ty)
+            if (col ~= 11) then
+                local px,py = stx+(enx-stx)*tx,sty+(eny-sty)*tx
+                pset(dx+px,dy+py,col)
+            end
+        end
+    end
 end
-
-function easeOutQuad(x) return 1 - (1 - x) * (1 - x) end
-function easeOutCubic(x) return 1 - (1 - x) * (1 - x) * (1 - x) end
-function easeInCubic(x) return x * x * x end

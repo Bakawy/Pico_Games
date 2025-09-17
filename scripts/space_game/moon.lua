@@ -4,7 +4,7 @@ local moons = {
         x = 64,
         y = 64,
         sprite = 2,
-        orbitRadius = 40,
+        orbitRadius = 20,
         orbitPeriod = 300,
         startAngle = 0.75,
         sizeMin = 8,
@@ -18,12 +18,16 @@ local jupiterY = 64
 
 local function drawMoon(moon)
     sspr((moon.sprite % 16) * 8, flr(moon.sprite / 8), 8, 8, moon.x - moon.size / 2, moon.y - moon.size / 2, moon.size, moon.size)
-    circ(moon.x, moon.y, moon.accuracyRadius + moon.size/2, 8)
+    --circ(moon.x, moon.y, moon.accuracyRadius + moon.size/2, 12)
+end
+
+function getMoons()
+    return moons
 end
 
 function updateMoons()
-    jupiterY = 64 + sin(orbitProgress / 500) * 20
-    jupiterX = 64 + cos(orbitProgress / 500) * 20
+    jupiterY = 64 + sin(orbitProgress / 500) * 10
+    jupiterX = 64 + cos(orbitProgress / 500) * 10
     for moon in all(moons) do
         local angle = (orbitProgress / moon.orbitPeriod) % 1 + moon.startAngle
         moon.front = (angle % 1) > 0.5 

@@ -49,7 +49,7 @@ local function drawPunch()
     local progress = playerState.progress / playerState.duration
     local cy = ease(centerY - 16, centerY + 5, progress, easeOutQuad)
     local restHandHeight = playerState.punchHigh and 32 or 16
-    local handHeight = playerState.punchHigh and 80 or 52
+    local handHeight = playerState.punchHigh and 80 or 37
     local handY = ease(128 - handHeight, cy - restHandHeight, progress, easeOutQuad)
     local elbowY = ease((handY + cy) / 2, cy, progress, easeOutQuad)
     if playerState.facing then

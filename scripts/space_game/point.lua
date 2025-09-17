@@ -16,6 +16,10 @@ function Point:new(o)
     return o
 end
 
+function getPoints()
+    return points
+end
+
 function drawPoints()
     local x, y = nil, nil
     for point in all(points) do

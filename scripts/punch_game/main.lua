@@ -30,7 +30,9 @@ function _init()
     ]]
     palt(0, false)
     palt(11, true)
+    initBattle()
 end
+
 
 function _update60()
     cls(7)
@@ -45,3 +47,6 @@ function _draw()
     print(flr(stat(1)*100).."% ram", 0, 0, 0)
 end
 
+function initBattle()
+
+end
