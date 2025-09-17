@@ -15,11 +15,14 @@ function _init()
 end
 
 function _update60()
-    deltaTime = 60 / stat(7)
+    deltaTime = 1--60 / stat(7)
     cls(7)
     updateCursor()
     updatePlayer()
     updateEnemies()
+    --camera(randDec(-2, 2), randDec(-2, 2))
+    --_draw()
+    --camera()
 end
 
 function _draw()
@@ -31,7 +34,7 @@ end
 
 function drawDebug()
     print(flr(stat(1)*100).."% cpu", 1, 1, 2)
-    --print(stat(7).." fps")
+    print(stat(7).." fps")
     print("wasd to move")
     print("lmb to change size")
     print("rmb to change sword sprite")
