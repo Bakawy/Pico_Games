@@ -6,44 +6,33 @@ U = {4, 1}
 D = {0, 1}
 O = {4, 0}
 X = {5, 0}
-deltaTime = null
-frame = 0
+score = 0
+global = _ENV
+local function drawDebug()
+    print(score, 1, 1, 0)
+    print(#enemies)
+end
 
 function _init()
     poke(0x5f2d, 0x1 + 0x2)
     palt(0, false)
     palt(11, true)
 
-    spawnEnemy(3)
+    Enemy:new({x=16, y=16}, enemies)
 end
 
 function _update60()
-    deltaTime = 60 / stat(7)
-    cls(15)
+    cls(7)
     updateCursor()
     updatePlayer()
     updateEnemies()
-    updateProjectiles()
-    --camera(randDec(-2, 2), randDec(-2, 2))
-    --_draw()
-    --camera()
-    frame += 1
 end
 
 function _draw()
-    drawProjectiles()
     drawEnemies()
     drawPlayer()
     drawCursor()
     drawDebug()
-end
-
-function drawDebug()
-    print(flr(stat(1)*100).."% cpu", 1, 1, 2)
-    print("wasd to move")
-    --print("lmb to spawn enemies")
-    print("rmb to change weapon sprite")
-    --print(tostr(ttn(X)).." "..tostr(ttn(O)))
 end
 
 function ttn(input)--table btn
@@ -56,16 +45,6 @@ function ttnp(input)
     return btnp(input[1], input[2])
 end
 
---[[
-Class = setmetatable({
-	new = function(self, table, toTable)
-		table = table or {}
-		setmetatable(table, {__index = self})
-        add(toTable, table)
-		return table
-	end,
-},{__index = _ENV})
-]]
 Class = setmetatable({
     new = function(_ENV,tbl, toTbl)
         tbl=tbl or {}

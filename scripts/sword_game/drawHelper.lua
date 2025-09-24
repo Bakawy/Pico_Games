@@ -1,3 +1,5 @@
+do
+
 function linefill(ax,ay,bx,by,r,c)
     --function by https://www.lexaloffle.com/bbs/?pid=80095
     if r <= 1 then
@@ -71,4 +73,6 @@ function rspr(sx,sy,sw,sh,a,dx,dy,dw,dh)
             end
         end
     end
+end
+
 end

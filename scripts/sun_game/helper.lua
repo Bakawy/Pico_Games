@@ -6,8 +6,4 @@ function dist(x1, y1, x2, y2)
     return sqrt(dx*dx + dy*dy)
 end
 
-function randDec(min, max)
-    return rnd(max - min) + min
-end
-
 end

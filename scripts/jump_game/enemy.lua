@@ -321,6 +321,8 @@ Enemy = Class:new({
 	apply_behavior = walker_behavior,
 })
 
+
+
 function spawn_enemies()
 	for x=0, 127 do
 		for y=0, 15 do 
