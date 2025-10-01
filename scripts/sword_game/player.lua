@@ -11,26 +11,36 @@ local cursorUnwrap = 0
 local weaponUnwrap = 0
 local lastWeaponUnwrap = 0
 
-local weaponTurnSpeed = 0.03
+local weaponTurnSpeed = 0.02
 local weaponVelocity = 0
+local weaponColor = 1
 local swingDistance = 0
+local sprite = 32--32
+
+--weapon stats
+local weaponTurnSpeed = 0
 local weaponSize = 16
-local sprite = 32
-local maxSprite = 37
+local knockback = 0
+local maxClickCD = 0
 
 local minTurnSpeed = 0.01
 local minSwingDistance = 0.15
 
 local clickCD = 0
-local maxClickCD = 0
 
+local debugSpecial = 0
 
 local spriteData = {
     [32] = {
-        color = 0,
+        kb = 4.5,
+        wts = 0.025,
+        setSpecial = function(special)
+            weaponSize = round(16 + 0.35 * special)
+            debugSpecial = weaponSize
+        end
     },
     [33] = {
-        color = 6,
+        kb = 5,
         wts = 0.02,
         mccd = 30,
         hitboxes = {},
@@ -48,6 +58,10 @@ local spriteData = {
                 end,
             }, projectiles)
         end,
+        setSpecial = function (special)
+            maxClickCD = 30 - 0.25 * special
+            debugSpecial = maxClickCD
+        end,
         hitboxes = {
             {
                 size = 0.5,
@@ -56,8 +70,8 @@ local spriteData = {
             },
         },
     },
+    --[[
     [34] = {
-        color = 9,
     },
     [35] = {
         color = 4,
@@ -76,7 +90,6 @@ local spriteData = {
         wts = 0.02
     },
     [36] = {
-        color = 0,
         mccd = 30,
         onClick = function()
             sprite = 44
@@ -84,7 +97,6 @@ local spriteData = {
         end,
     },
     [37] = {
-        color = 8,
         hitboxes = {
             {
                 size = 1,
@@ -97,7 +109,6 @@ local spriteData = {
         end,
     },
     [44] = {
-        color = 7,
         mccd = 30,
         wts = 0.06,
         onClick = function()
@@ -112,11 +123,13 @@ local spriteData = {
             },
         },
     }
+    ]]
 }
 
-function playerHit(dir)
+function playerHit(dir, dmg)
+    dmg = dmg or 5
     if (invincible > 0) return
-    push = {mag=5, dir=dir}
+    push = {mag=dmg, dir=dir}
     invincible = 10
 end
 
@@ -141,20 +154,43 @@ function getHitbox()
             r = weaponSize * hitbox.size/2,
         })
     end
-    return outputHitboxes, weaponVelocity
+    return outputHitboxes, weaponVelocity, knockback
 end
 
+function getWeapon()
+    return sprite, spriteData[sprite]
+end
 
 function getPlayerPos()
     return x, y, sizeRadius
 end
 
-function setWeaponStats()
-    weaponTurnSpeed = spriteData[sprite].wts or 0.03
-    maxClickCD = spriteData[sprite].mccd or 0
+function setWeaponStats(colors)
+    --weaponTurnSpeed = spriteData[sprite].wts or 0.03
+    --maxClickCD = spriteData[sprite].mccd or 0
+    local red = (colors[4] or 0) + (colors[7] or 0) + (colors[8] or 0) + 3 * (colors[10] or 0) - (colors[11] or 0)
+    local yellow = (colors[5] or 0) + (colors[7] or 0) + (colors[9] or 0) + 3 * (colors[11] or 0) - (colors[12] or 0)
+    local blue = (colors[6] or 0) + (colors[8] or 0) + (colors[9] or 0) + 3 * (colors[12] or 0) - (colors[10] or 0)
+    knockback = spriteData[sprite]["kb"] + 0.05 * red
+    weaponTurnSpeed = spriteData[sprite]["wts"] + 0.0005 * yellow
+    spriteData[sprite]["setSpecial"](blue)
 end
 
-setWeaponStats()
+setWeaponStats({})
+
+function setWeaponColor(col)
+    weaponColor = col
+end
+
+function setPlayerPos(posx, posy)
+    x = posx
+    y = posy
+end
+
+function swapWeapon()
+    sprite = 32 + ((sprite + 1) % 2)
+    setWeaponStats({})
+end
 
 local function applyInputs()
     local speed = 0.75 * deltaTime
@@ -167,10 +203,6 @@ local function applyInputs()
             if (spriteData[sprite]["onClick"]) spriteData[sprite]["onClick"]()
             clickCD = maxClickCD
         end
-    end
-    if ttnp(O) then 
-        sprite = max(32, (sprite + 1) % (maxSprite + 1)) 
-        setWeaponStats()
     end
 end
 
@@ -236,7 +268,7 @@ function drawPlayer()
 
     local hitboxes = getHitbox()
     for hitbox in all(hitboxes) do 
-        circfill(hitbox.x, hitbox.y, hitbox.r, (swing and 8 or 3))
+        circfill(hitbox.x, hitbox.y, hitbox.r, (swing and 4 or 9))
     end
 
     local sd = abs(swingDistance)
@@ -244,13 +276,17 @@ function drawPlayer()
         local width = weaponSize/12
         local l = spriteData[sprite]["hitboxes"] and weaponSize * spriteData[sprite]["hitboxes"][1].length or weaponSize * 1.25
         local da = weaponAngle - mid(0, (sd - minSwingDistance)/(minSwingDistance), 1) * 0.1 * sgn(weaponVelocity)--(weaponVelocity * 5 * 0.02/weaponTurnSpeed)
-        linefill(x + l * cos(da), y + l * sin(da), x + l * cos(weaponAngle), y + l * sin(weaponAngle), width, spriteData[sprite].color or 0)
+        linefill(x + l * cos(da), y + l * sin(da), x + l * cos(weaponAngle), y + l * sin(weaponAngle), width, weaponColor)
     end
     local sx, sy = (sprite % 16) * 8, flr(sprite / 16) * 8
     rspr(sx, sy + 8, 8, 8, weaponAngle - 0.25, x + 0.25 * weaponSize * cos(weaponAngle), y + 0.25 * weaponSize * sin(weaponAngle), weaponSize, weaponSize)
     rspr(sx, sy, 8, 8, weaponAngle - 0.25, x + 0.96 * weaponSize * cos(weaponAngle), y + 0.96 * weaponSize * sin(weaponAngle), weaponSize, weaponSize)
-    circfill(x, y, sizeRadius, 11)
+    circfill(x, y, sizeRadius, 0)
 
+
+    local text = "\#1\f4"..knockback.." \f5"..weaponTurnSpeed.." \f6"..debugSpecial
+    local len = print(text, 0, -10)
+    print(text, 64 - len/2, 120, 1)
     --[[
     local cx, cy = getCursorPos()
     local cursorDist = dist(x, y, cx, cy)

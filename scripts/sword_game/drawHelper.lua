@@ -67,7 +67,7 @@ function rspr(sx,sy,sw,sh,a,dx,dy,dw,dh)
         for x=0,dw-1 do
             local tx = x/dw
             local col = sget(sx+sw*tx,sy+sh*ty)
-            if (col ~= 11) then
+            if (col ~= 0) then
                 local px,py = stx+(enx-stx)*tx,sty+(eny-sty)*tx
                 pset(dx+px,dy+py,col)
             end

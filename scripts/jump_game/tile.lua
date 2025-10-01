@@ -134,7 +134,7 @@ function normal_move(self)
 	end
 
 	local collided = false
-	y, _, collided = sweep_move_y(x, y, y_velocity)
+	y, _, collided = move_y(x, y, y_velocity)
 
 	if y_velocity > 0 and collided then
 		local tx, ty = coordinate_to_tile(x, y)
@@ -160,7 +160,7 @@ function normal_move(self)
 	end
 
 	collided = false
-	x, _, collided = sweep_move_x(x, y, x_velocity)
+	x, _, collided = move_x(x, y, x_velocity)
 
 	if collided then
 		local tx, ty = coordinate_to_tile(x, y)
@@ -234,10 +234,10 @@ function clone_move(self)
 	y_velocity += gravity
 
 
-	x, x_velocity = sweep_move_x(x, y, x_velocity)
+	x, x_velocity = move_x(x, y, x_velocity)
 
 	local old_yv = y_velocity
-	y, y_velocity, collided = sweep_move_y(x, y, y_velocity)
+	y, y_velocity, collided = move_y(x, y, y_velocity)
 	grounded = false
 	if old_yv > 0 and collided then
 		grounded = true

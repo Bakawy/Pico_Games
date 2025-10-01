@@ -7,7 +7,7 @@
       "request": "launch",
       "runtimeExecutable": "/Applications/PICO-8.app/Contents/MacOS/pico8",
       "args": [
-        "-run", "${workspaceFolder}/sword_game.p8",
+        "-run", "${workspaceFolder}/orb_game.p8",
         //"-frameless", "1",
         //"-width", "1000",
         //"-height", "1000",

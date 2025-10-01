@@ -69,7 +69,7 @@ Player = Class:new({
 
 		local old_y_velocity = y_velocity
 		local collided = false
-		y, y_velocity, collided = sweep_move_y(x, y, y_velocity)
+		y, y_velocity, collided = move_y(x, y, y_velocity)
 
 		grounded = false
 		if old_y_velocity > 0 and collided then
@@ -80,7 +80,7 @@ Player = Class:new({
 			cayote_time = max_cayote_time
 		end
 
-		x, x_velocity = sweep_move_x(x, y, x_velocity)
+		x, x_velocity = move_x(x, y, x_velocity)
 		
 		for i,s in pairs(status) do s.length-=1 if s.length<1 then status[i]=nil end end
 		if status.speed then frict *= status.speed.magnitude end

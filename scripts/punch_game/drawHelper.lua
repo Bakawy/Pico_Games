@@ -69,6 +69,13 @@ function linefill(ax,ay,bx,by,r,c)
     end
 end
 
+
+--[[
+    @param from number start value
+    @param to number end value
+    @param progress number 0-1 
+    @param funct function easing function
+]]
 function ease(from, to, progress, funct)
     return from + (to - from) * funct(progress)
 end

@@ -237,10 +237,10 @@ Enemy = Class:new({
 		local x_collided, y_collided = false, false
 		local xv, yv = 0, 0
 
-		x, xv, x_collided = sweep_move_x(x, y, x_velocity)
+		x, xv, x_collided = move_x(x, y, x_velocity)
 
 		y_velocity += gravity
-		y, yv, y_collided = sweep_move_y(x, y, y_velocity)
+		y, yv, y_collided = move_y(x, y, y_velocity)
 
 
 		apply_behavior(_ENV, x_collided, y_collided, xv, yv)

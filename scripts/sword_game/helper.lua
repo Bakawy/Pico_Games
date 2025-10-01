@@ -10,4 +10,16 @@ function randDec(min, max)
     return rnd(max - min) + min
 end
 
+function cycle(tbl, f, offset)
+    local offset = offset or 0
+    local interval = f * #tbl
+    local index = flr(((frame + offset) % interval) / (interval / #tbl)) + 1
+    return tbl[index]
+end
+
+function round(num)
+    if (num % 1 >= 0.5) return ceil(num)
+    return flr(num)
+end
+
 end

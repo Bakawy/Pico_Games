@@ -6,44 +6,106 @@ U = {4, 1}
 D = {0, 1}
 O = {4, 0}
 X = {5, 0}
-deltaTime = null
+deltaTime = nil
 frame = 0
+roundTimer = 0
+roundTime = 20 * 60
+roundCount = 0
+gameState = 0
+cam = {x=64, y=64}
+mainPal = {
+    [0] = -1,
+    [1] = 0,
+    [2] = 5,
+    [3] = 7,
+    [4] = 8,
+    [5] = 10,
+    [6] = -4,
+    [7] = -7,
+    [8] = 2,
+    [9] = -5,
+    [10] = 14,
+    [11] = -9,
+    [12] = 12,
+    [13] = 7,
+    [14] = 7,
+    [15] = 7,
+} 
+global = _ENV
 
 function _init()
     poke(0x5f2d, 0x1 + 0x2)
-    palt(0, false)
-    palt(11, true)
-
+    menuitem(1, "swap weapon", swapWeapon)
+    menuitem(2, "infinite color", debugInfiniteColors)
+    pal(mainPal, 1)
     spawnEnemy(3)
 end
 
 function _update60()
-    deltaTime = 60 / stat(7)
-    cls(15)
     updateCursor()
-    updatePlayer()
-    updateEnemies()
-    updateProjectiles()
+    if gameState == 0 then
+        deltaTime = 60 / stat(7)
+        cls(2)
+        updatePlayer()
+        updateEnemies()
+        updateProjectiles()
+
+        --cam.x, cam.y = getPlayerPos()
+        
+        if (roundTimer >= roundTime) then
+            gameState = 1
+            initDrawMenu()
+            roundTimer = 0
+        end
+        roundTimer += 1
+    elseif gameState == 1 then
+        cls(0)
+        updateDrawMenu()
+    elseif gameState == 2 then
+        cls(3)
+        updateCombineMenu()
+    end
     --camera(randDec(-2, 2), randDec(-2, 2))
     --_draw()
     --camera()
+    camera(cam.x - 64, cam.y - 64)
     frame += 1
 end
 
 function _draw()
-    drawProjectiles()
-    drawEnemies()
-    drawPlayer()
+    --rect(-1, -1, 128, 128, 7)
+    if gameState == 0 then
+        drawProjectiles()
+        drawEnemies()
+        drawPlayer()
+    elseif gameState == 1 then
+        drawDrawMenu()
+    elseif gameState == 2 then
+        drawCombineMenu()
+    end
     drawCursor()
     drawDebug()
 end
 
 function drawDebug()
-    print(flr(stat(1)*100).."% cpu", 1, 1, 2)
-    print("wasd to move")
-    --print("lmb to spawn enemies")
-    print("rmb to change weapon sprite")
-    --print(tostr(ttn(X)).." "..tostr(ttn(O)))
+    camera()
+    print(flr(stat(1)*100).."% cpu", 1, 1, 12)
+    if gameState == 0 then
+        print("wasd to move")
+        --print("rmb to change weapon sprite")
+        local text = "timer "..ceil((roundTime - roundTimer)/60)
+        print(text, 96 - #text * 3, 1, 1)
+    elseif gameState == 1 then
+        print("click away to fight")
+    end
+    camera(cam.x - 64, cam.y - 64)
+end
+
+function initGame()
+    setPlayerPos(64, 64)
+    enemies = {}
+    roundCount += 1
+    spawnEnemy(3 + roundCount/3)
 end
 
 function ttn(input)--table btn
@@ -74,7 +136,7 @@ Class = setmetatable({
             __index=_ENV
         })
 
-        add(toTbl, tbl)
+        if (toTbl) add(toTbl, tbl)
         return tbl
     end,
     

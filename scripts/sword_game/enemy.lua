@@ -24,8 +24,8 @@ local function checkWeapon(enemy)
             local linearSpeed = abs(wv) * rlen
 
             enemy.hit = atan2(ux, uy) + randDec(-0.07, 0.07)
-            enemy.kb += 0.05--mid(0.08, speed * 0.25, 0.28)
-            --noHit = 3
+            enemy.kb += 0.2--mid(0.08, speed * 0.25, 0.28)
+            enemy.noHit = 10
             break
         end
     end
@@ -36,6 +36,8 @@ Enemy = Class:new({
     y = 64,
     size = 4,
     speed = 0.3,
+    dmg = 5,
+    def=1,
     hit = false,
     dead = false,
     stun = 0,
@@ -43,6 +45,7 @@ Enemy = Class:new({
     kb = 1,
     spawn = 0,
     noHit = 0,
+    col = 0,
     update = function(_ENV) 
         if spawn < spawnDuration then
             spawn += 1
@@ -60,7 +63,8 @@ Enemy = Class:new({
         checkPlayerCol(_ENV)
 
         if hit then
-            push = {mag=5 * kb, dir=hit}
+            local a, b, dmg = getHitbox()
+            push = {mag=dmg * kb * def, dir=hit}
             hit = false
         end
     end,
@@ -97,7 +101,32 @@ enemies = {}
 function spawnEnemy(count)
     count = count or 1
     for i=1,count do
-        Enemy:new({x=randDec(8, 120), y=randDec(8, 120)}, enemies)
+        local t = rnd({4, 5, 6})
+        local tTable = {
+            [4] = {
+                dmg=10,
+                speed=0.3,
+                def=1,
+            },
+            [5] = {
+                dmg=5,
+                speed=0.6,
+                def=1,
+            },
+            [6] = {
+                dmg=5,
+                speed=0.3,
+                def=0.75,
+            },
+        }
+        Enemy:new({
+            x=randDec(8, 120), 
+            y=randDec(8, 120), 
+            col=t,
+            dmg=tTable[t].dmg,
+            speed=tTable[t].speed,
+            def=tTable[t].def,
+        }, enemies)
     end
 end
 
@@ -105,6 +134,7 @@ function updateEnemies()
     for e in all(enemies) do
         e:update()
         if (e.dead) then
+            addColor(e.col, 1)
             del(enemies, e)
             spawnEnemy()
         end
@@ -116,7 +146,7 @@ function drawEnemies()
         if e.spawn < spawnDuration then
             spr(2, e.x - 4, e.y - 4)
         else
-            circfill(e.x, e.y, e.size, 1)
+            circfill(e.x, e.y, e.size, e.col)
         end
     end
 end
