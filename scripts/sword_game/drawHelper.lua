@@ -75,4 +75,9 @@ function rspr(sx,sy,sw,sh,a,dx,dy,dw,dh)
     end
 end
 
+function centerPrint(text, x, y, col)
+    local len = print(text, 0, -12) - 1
+    print(text, x - ceil(len/2), y - 2, col)
+end
+
 end

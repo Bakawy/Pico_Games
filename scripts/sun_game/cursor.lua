@@ -4,8 +4,9 @@ local x = 64
 local y = 64
 
 function updateCursor()
-    x = stat(32)
-    y = stat(33)
+    local camx, camy = getCamera()
+    x = stat(32) + camx - 64
+    y = stat(33) + camy - 64
 end
 
 function drawCursor()  

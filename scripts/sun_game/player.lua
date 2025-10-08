@@ -1,12 +1,11 @@
 do
-
-local x, y = 64, 64 
-local xVel, yVel = 0, 0
-local maxVel = 3
-local frict = 0.15
-local shieldDist = 20
-local shieldRadius = 6
-local sizeRadius = 4
+x, y = 0, 0
+shieldDist = 16
+maxVel = 5
+xVel, yVel = 0
+frict = 0.25
+sizeRadius = 4
+shieldRadius = 6
 
 local function applyInputs()
     local accel = 0.5
@@ -22,25 +21,29 @@ local function applyInputs()
     xVel = abs(xVel) < frict and 0 or xVel - sgn(xVel)*frict
     yVel = abs(yVel) < frict and 0 or yVel - sgn(yVel)*frict
 
-    x = mid(0, x, 128)
-    y = mid(0, y, 128)
+    --x = mid(0, x, 128)
+    --y = mid(0, y, 128)
 end
 
 function getPlayerPos()
     return x, y, sizeRadius
 end
 
+function getShieldPos()
+    local cx, cy = getCursorPos()
+    local angle = atan2(cx - x, cy - y)
+    return x + shieldDist * cos(angle), y + shieldDist * sin(angle), shieldRadius
+end
+
 function updatePlayer()
     applyInputs()
-    print(xVel.." "..yVel, 64, 64, 0)
 end
 
 function drawPlayer()
     circfill(x, y, sizeRadius, 5)
 
-    local cx, cy = getCursorPos()
-    local angle = atan2(cx - x, cy - y)
-    circfill(x + shieldDist * cos(angle), y + shieldDist * sin(angle), shieldRadius, 6)
+    local sx, sy = getShieldPos()
+    circfill(sx, sy, shieldRadius, 6)
 end
 
 end

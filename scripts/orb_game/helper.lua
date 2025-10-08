@@ -1,5 +1,18 @@
 do 
 
+function clone(t)
+    local copy = {}
+    for k,v in pairs(t) do
+        if type(v) == "table" then
+            copy[k] = clone(v)
+        else
+            copy[k] = v
+        end
+    end
+    return copy
+end
+
+
 function move_y(x,y,vy,size)
 	local collided = false
     local dir = sgn(vy)
@@ -18,7 +31,7 @@ function move_y(x,y,vy,size)
     for ty = tileTop, tileBottom do
         for tx = tileLeft, tileRight do
             if fget(mget(tx, ty), 0) then
-                collided = true
+                collided = mget(tx, ty)
                 if dir == 1 then
                     y = ty * 8 - size/2
                 else
@@ -51,7 +64,7 @@ function move_x(x,y,vx,size)
     for ty = tileTop, tileBottom do
         for tx = tileLeft, tileRight do
             if fget(mget(tx, ty), 0) then
-                collided = true
+                collided = mget(tx, ty)
                 if dir == 1 then
                     x = tx * 8 - size/2
                 else
@@ -87,5 +100,59 @@ end
 
 
 function linear(x) return x end
+
+function centerPrint(text, x, y, col)
+    local len = print(text, 0, -12)
+    print(text, x - len/2, y - 2, col)
+end
+
+function randDec(min, max)
+    return rnd(max - min) + min
+end
+
+function linefill(ax,ay,bx,by,r,c)
+    --function by https://www.lexaloffle.com/bbs/?pid=80095
+    if r <= 1 then
+        line(ax, ay, bx, by, c)
+    end
+    if(c) color(c)
+    local dx,dy=bx-ax,by-ay
+    -- avoid overflow
+    -- credits: https://www.lexaloffle.com/bbs/?tid=28999
+     local d=max(abs(dx),abs(dy))
+     local n=min(abs(dx),abs(dy))/d
+    d*=sqrt(n*n+1)
+    if(d<0.001) return
+    local ca,sa=dx/d,-dy/d
+   
+    -- polygon points
+    local s={
+     {0,-r},{d,-r},{d,r},{0,r}
+    }
+    local u,v,spans=s[4][1],s[4][2],{}
+    local x0,y0=ax+u*ca+v*sa,ay-u*sa+v*ca
+    for i=1,4 do
+        local u,v=s[i][1],s[i][2]
+        local x1,y1=ax+u*ca+v*sa,ay-u*sa+v*ca
+        local _x1,_y1=x1,y1
+        if(y0>y1) x0,y0,x1,y1=x1,y1,x0,y0
+        local dx=(x1-x0)/(y1-y0)
+        if(y0<0) x0-=y0*dx y0=-1
+        local cy0=y0\1+1
+        -- sub-pix shift
+        x0+=(cy0-y0)*dx
+        for y=y0\1+1,min(y1\1,127) do
+            -- open span?
+            local span=spans[y]
+            if span then
+                rectfill(x0,y,span,y)
+            else
+                spans[y]=x0
+            end
+            x0+=dx
+        end
+        x0,y0=_x1,_y1
+    end
+end
 
 end

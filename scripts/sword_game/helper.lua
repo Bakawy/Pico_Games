@@ -22,4 +22,12 @@ function round(num)
     return flr(num)
 end
 
+function sprPal(s, x, y, tbl)
+    for k,v in pairs(tbl) do
+        pal(k, v, 0)
+    end
+    spr(s, x, y)
+    pal(0)
+end
+
 end

@@ -32,11 +32,15 @@ mainPal = {
     [15] = 7,
 } 
 global = _ENV
+showHitbox = false
 
 function _init()
     poke(0x5f2d, 0x1 + 0x2)
     menuitem(1, "swap weapon", swapWeapon)
     menuitem(2, "infinite color", debugInfiniteColors)
+    menuitem(3, "toggle hitbox", function()
+        showHitbox = not showHitbox
+    end)
     pal(mainPal, 1)
     spawnEnemy(3)
 end
@@ -49,6 +53,7 @@ function _update60()
         updatePlayer()
         updateEnemies()
         updateProjectiles()
+        updateParticles()
 
         --cam.x, cam.y = getPlayerPos()
         
@@ -64,6 +69,9 @@ function _update60()
     elseif gameState == 2 then
         cls(3)
         updateCombineMenu()
+    elseif gameState == 3 then
+        cls(1)
+        if (btnp(4) or btnp(5)) run()
     end
     --camera(randDec(-2, 2), randDec(-2, 2))
     --_draw()
@@ -78,10 +86,14 @@ function _draw()
         drawProjectiles()
         drawEnemies()
         drawPlayer()
+        drawParticles()
     elseif gameState == 1 then
         drawDrawMenu()
     elseif gameState == 2 then
         drawCombineMenu()
+    elseif gameState == 3 then
+        centerPrint(":(", 64, 64, 3)
+        centerPrint("click to restart", 64, 70, 3)
     end
     drawCursor()
     drawDebug()
@@ -106,6 +118,7 @@ function initGame()
     enemies = {}
     roundCount += 1
     spawnEnemy(3 + roundCount/3)
+    roundTime = (20 + 2 * roundCount) * 60
 end
 
 function ttn(input)--table btn

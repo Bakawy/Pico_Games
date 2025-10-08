@@ -11,6 +11,7 @@ local cursorUnwrap = 0
 local weaponUnwrap = 0
 local lastWeaponUnwrap = 0
 
+local wasSwinging = false
 local weaponTurnSpeed = 0.02
 local weaponVelocity = 0
 local weaponColor = 1
@@ -32,7 +33,7 @@ local debugSpecial = 0
 
 local spriteData = {
     [32] = {
-        kb = 4.5,
+        kb = 5,
         wts = 0.025,
         setSpecial = function(special)
             weaponSize = round(16 + 0.35 * special)
@@ -41,7 +42,7 @@ local spriteData = {
     },
     [33] = {
         kb = 5,
-        wts = 0.02,
+        wts = 0.025,
         mccd = 30,
         hitboxes = {},
         onClick = function()
@@ -233,6 +234,15 @@ local function updateWeaponDirectional()
     else
         swingDistance = 0
     end
+
+
+    local swinging = abs(weaponVelocity) >= minTurnSpeed and abs(swingDistance) > minSwingDistance and push.mag <= 0
+
+    if swinging and not wasSwinging then
+        sfx(0)
+    end
+
+    wasSwinging = swinging
 end
 
 function updatePlayer()
@@ -257,6 +267,11 @@ function updatePlayer()
 
     updateWeaponDirectional()
 
+    if (x != mid(-4, x, 132) or y != mid(-4, y, 132)) then 
+        gameState = 3
+        sfx(3)
+    end
+
     clickCD -= 1
     invincible -= 1
 end
@@ -266,9 +281,11 @@ function drawPlayer()
     local weaponAngle = weaponUnwrap % 1
     local swing = isSwing()
 
-    local hitboxes = getHitbox()
-    for hitbox in all(hitboxes) do 
-        circfill(hitbox.x, hitbox.y, hitbox.r, (swing and 4 or 9))
+    if showHitbox then
+        local hitboxes = getHitbox()
+        for hitbox in all(hitboxes) do 
+            circfill(hitbox.x, hitbox.y, hitbox.r, (swing and 4 or 9))
+        end
     end
 
     local sd = abs(swingDistance)

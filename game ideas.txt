@@ -1,0 +1,3 @@
+* WarioWare with randomized modular minigames
+* (using WASD and D-pad) controlling 2 little guys and fighting 1 big guy
+* Get resources on idle game and use them to play active game and get more resources (like UFO 50 Pilot Quest)

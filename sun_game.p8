@@ -6,6 +6,7 @@ __lua__
 #include scripts/sun_game/player.lua
 #include scripts/sun_game/enemy.lua
 #include scripts/sun_game/helper.lua
+#include scripts/sun_game/projectile.lua
 
 __gfx__
 0000000000bbbbbb0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
