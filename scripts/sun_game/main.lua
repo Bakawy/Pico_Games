@@ -8,25 +8,30 @@ O = {4, 0}
 X = {5, 0}
 score = 0
 global = _ENV
+bounds = 128
 local cam = {x=64, y=64}
 local function drawDebug()
     debugPrint(flr(stat(1)*100).."% cpu", 1, 1, 12)
-    debugPrint(score)
-    debugPrint(#projectiles)
+    debugPrint("score: "..score)
+    debugPrint("wasd to move")
     local px, py = getPlayerPos()
-    debugPrint(px.." "..py)
 end
 
 function _init()
     poke(0x5f2d, 0x1 + 0x2)
-    palt(0, false)
-    palt(11, true)
+    pal({
+        [2] = -2,
+    }, 1)
+    --palt(0, false)
+    --palt(11, true)
 
-    Enemy:new({x=16, y=16}, enemies)
+    Enemy:new({x=randDec(-bounds, bounds), y=randDec(-bounds, bounds)}, enemies)
+    --Enemy:new({x=randDec(-bounds, bounds), y=randDec(-bounds, bounds)}, enemies)
+    --Enemy:new({x=randDec(-bounds, bounds), y=randDec(-bounds, bounds)}, enemies)
 end
 
 function _update60()
-    cls(7)
+    cls(2)
     local px, py = getPlayerPos()
     setCamera(px, py)
     updateCursor()
@@ -39,8 +44,10 @@ function _draw()
     drawEnemies()
     drawPlayer()
     drawProjectiles()
+    drawHUD()
     drawCursor()
     drawDebug()
+    rect(-bounds, -bounds, bounds, bounds, 0)
 end
 
 function ttn(input)--table btn

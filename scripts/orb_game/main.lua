@@ -18,9 +18,9 @@ function _update60()
 end
 
 function _draw()
-    drawEnemies()
     drawOrb()
     drawPlayer()
+    drawEnemies()
     print(flr(stat(1)*100).."% cpu", 1, 1, 12)
 end
 

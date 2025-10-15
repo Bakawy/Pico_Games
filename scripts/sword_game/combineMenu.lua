@@ -39,71 +39,91 @@ Button = Class:new({
 buttons = {}
 
 local selected = 0
-local input2
-local input1 = Button:new({
-    x = 20,
-    size = 32,
-    sprite = 5,
-    onClick = function (_ENV)
-        sprite = 21
-        if (selected == 2) input2.sprite = 6
-        selected = 1
-    end
-}, buttons)
-input2 = Button:new({
-    x = 55,
-    size = 32,
-    sprite = 6,
-    onClick = function (_ENV)
-        sprite = 22
-        if (selected == 1) input1.sprite = 5
-        selected = 2
-    end
-}, buttons)
-local combine = Button:new({
-    x = 92,
-    size = 32,
-    sprite = 7,
-    onClick = function (_ENV)
-        if (not (input1.col and input2.col)) return
-        local color1 = min(input1.col, input2.col)
-        local color2 = max(input1.col, input2.col)
-        for r in all(recipies) do 
-            if r[1] == color1 and r[2] == color2 and weaponColors[color1] > 0 and weaponColors[color2] > 0 then
-                addColor(color1, -1)
-                addColor(color2, -1)
-                addColor(r[3], 1)
-            end
-        end
-    end
-}, buttons)
-local goBack = Button:new({
-    x = 64,
-    y = 115,
-    size = 16,
-    sprite = 8,
-    onClick = function (_ENV)
-        global.gameState = 1
-        --initDrawMenu()
-    end
-}, buttons)
-colorButtons = {}
-for i=4,15 do 
-    add(colorButtons, Button:new({
-        y = 96,
-        x = 10 * i - 40 + 10,
-        col = i,
-        onClick = function ()
-            if selected == 1 then
-                input1.col = i
-            elseif selected == 2 then
-                input2.col = i
-            end
-        end
-    }, buttons))
-end
+local input1, input2, combine, goBack
+local colorButtons = {}
 
 function initCombineMenu()
+    colorButtons = {}
+    buttons = {}
+    for i=4,12 do 
+        add(colorButtons, Button:new({
+            y = 96,
+            x = 10 * i - 40 + 10,
+            col = i,
+            onClick = function ()
+                if selected == 1 then
+                    input1.col = i
+                elseif selected == 2 then
+                    input2.col = i
+                end
+            end
+        }, buttons))
+    end
+
+    for i=4,12 do 
+        add(colorButtons, Button:new({
+            y = 96,
+            x = 10 * i - 40 + 10,
+            col = i,
+            onClick = function ()
+                if selected == 1 then
+                    input1.col = i
+                elseif selected == 2 then
+                    input2.col = i
+                end
+            end
+        }, buttons))
+    end
+
+    input1 = Button:new({
+        x = 20,
+        size = 32,
+        sprite = 5,
+        onClick = function (_ENV)
+            sprite = 21
+            if (selected == 2) input2.sprite = 6
+            selected = 1
+        end
+    }, buttons)
+    input2 = Button:new({
+        x = 55,
+        size = 32,
+        sprite = 6,
+        onClick = function (_ENV)
+            sprite = 22
+            if (selected == 1) input1.sprite = 5
+            selected = 2
+        end
+    }, buttons)
+    combine = Button:new({
+        x = 92,
+        size = 32,
+        sprite = 7,
+        onClick = function (_ENV)
+            if (not (input1.col and input2.col)) return
+            local color1 = min(input1.col, input2.col)
+            local color2 = max(input1.col, input2.col)
+            for r in all(recipies) do 
+                if r[1] == color1 and r[2] == color2 and weaponColors[color1] > 0 and weaponColors[color2] > 0 then
+                    addColor(color1, -1)
+                    addColor(color2, -1)
+                    addColor(r[3], 1)
+                end
+            end
+        end
+    }, buttons)
+    goBack = Button:new({
+        x = 64,
+        y = 115,
+        size = 16,
+        sprite = 8,
+        onClick = function (_ENV)
+            global.gameState = 1
+            initDrawMenu()
+        end
+    }, buttons)
+
+
     weaponColors = getWeaponColors()
     input1.col = nil
     input2.col = nil
@@ -119,6 +139,7 @@ function updateCombineMenu()
 end
 
 function drawCombineMenu()
+    spawnBackgroundParticles()
     for b in all(buttons) do
         b:draw()
     end
@@ -127,23 +148,24 @@ function drawCombineMenu()
         len = print(text, 0, -10)
         print(text, b.x - len/2, b.y - 2, 1)
     end
+    rrectfill(12, 4, 48, 36, 4, 3)
     --secondary
     sprPal(9, 16, 8, {[1]=4,[2]=5,[3]=6})
-    spr(10, 24, 8)
+    sprPal(10, 24, 8, {[3]=-1})
     sprPal(9, 32, 8, {[1]=6,[2]=4,[3]=5})
-    sprPal(7, 40, 8, {[1]=3,[3]=1})
+    sprPal(7, 40, 8, {[1]=-1,[3]=1})
     sprPal(9, 48, 8, {[1]=8,[2]=7,[3]=9})
     --tertiary
     sprPal(9, 16, 18, {[1]=7,[2]=8,[3]=9})
-    spr(10, 24, 18)
+    sprPal(10, 24, 18, {[3]=-1})
     sprPal(9, 32, 18, {[1]=5,[2]=4,[3]=6})
-    sprPal(7, 40, 18, {[1]=3,[3]=1})
+    sprPal(7, 40, 18, {[1]=-1,[3]=1})
     sprPal(9, 48, 18, {[1]=11,[2]=10,[3]=12})
 
     sprPal(9, 16, 28, {[1]=7,[2]=8,[3]=9})
-    spr(10, 24, 28)
+    sprPal(10, 24, 28, {[3]=-1})
     sprPal(9, 32, 28, {[1]=4,[2]=6,[3]=5})
-    sprPal(7, 40, 28, {[1]=3,[3]=1})
+    sprPal(7, 40, 28, {[1]=-1,[3]=1})
     sprPal(9, 48, 28, {[1]=10,[2]=12,[3]=11})
 end
 

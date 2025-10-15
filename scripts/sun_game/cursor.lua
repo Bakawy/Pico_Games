@@ -10,7 +10,7 @@ function updateCursor()
 end
 
 function drawCursor()  
-    spr(1, x, y)
+    sprPal(1, x, y, {[1]=0})
 end
 
 function getCursorPos()

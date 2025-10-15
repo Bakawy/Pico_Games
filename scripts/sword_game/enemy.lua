@@ -10,10 +10,11 @@ local function checkWeapon(enemy)
         return x/m, y/m, m
     end
 
-    local hitboxes, wv = getHitbox()
+    local hitboxes, wv, _, direct = getHitbox()
     local px, py = getPlayerPos()
     for h in all(hitboxes) do
         if (isSwing() and dist(enemy.x, enemy.y, h.x, h.y) < enemy.size + h.r) then
+            addAmmo()
             local rx, ry = h.x - px, h.y - py
             local rlen = sqrt(rx*rx + ry*ry)
 
@@ -24,6 +25,7 @@ local function checkWeapon(enemy)
             local linearSpeed = abs(wv) * rlen
 
             enemy.hit = atan2(ux, uy) + randDec(-0.07, 0.07)
+            if (direct) enemy.hit = atan2(rx, ry) + randDec(-0.07, 0.07)
             enemy.kb += 0.2--mid(0.08, speed * 0.25, 0.28)
             enemy.noHit = 10
             break
@@ -46,18 +48,20 @@ Enemy = Class:new({
     spawn = 0,
     noHit = 0,
     col = 0,
+    toh = true, --Trigger On Hit
     behavior = function(_ENV) 
         local px, py = getPlayerPos()
         local dir = atan2(px - x, py - y)
         return {mag=1,dir=dir}
     end,
+    
     update = function(_ENV) 
         if spawn < spawnDuration then
             spawn += 1
             return
         end
 
-        move(_ENV)
+        moveDir = move(_ENV)
 
         if noHit > 0 then
             noHit -= 1
@@ -65,13 +69,36 @@ Enemy = Class:new({
             checkWeapon(_ENV)
         end
 
-        checkPlayerCol(_ENV)
+        checkPlayerCol(_ENV, moveDir)
 
         if hit then
+            if (toh) triggerOnHit()
+            toh = true
             local a, b, dmg = getHitbox()
             push = {mag=dmg * kb * def, dir=hit}
             hit = false
-            sfx(1)
+
+            local mag = 2
+            for i=1, 10 do
+                local angle = randDec(0, 1)
+                local dx, dy = mag * cos(angle), mag * sin(angle)
+                local radius = 5
+                local len = 10
+                Particle:new({
+                    x = x,
+                    dx = dx,
+                    ddx = -dx/len,
+                    y = y,
+                    dy = dy,
+                    ddy = -dy/len,
+                    r = radius,
+                    dr = -radius/len,
+                    len = len,
+                    col = col
+                },particles)
+            end
+
+            sfx(4)
         end
     end,
     move = function(_ENV)
@@ -91,12 +118,13 @@ Enemy = Class:new({
         if x + size < 0 or x - size > 128 or y + size < 0 or y - size > 128 then
             dead = true
         end
+        return bmove.dir
     end,
-    checkPlayerCol = function(_ENV)
-
+    checkPlayerCol = function(_ENV, velDir)
+        if (push.mag > 0) return
         local px, py, pr = getPlayerPos()
         if dist(x, y, px, py) < size + pr then
-            playerHit(atan2(px - x, py - y))
+            playerHit(velDir)
             stun = 15
         end
     end,
@@ -186,7 +214,8 @@ end
 function updateEnemies()
     for e in all(enemies) do
         e:update()
-        if (e.dead) then
+        if e.dead then
+            score += 1
             addColor(e.col, 1)
             deathParticle(e)
             sfx(2)

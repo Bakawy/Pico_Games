@@ -17,17 +17,34 @@ function cycle(tbl, f, offset)
     return tbl[index]
 end
 
-function round(num)
-    if (num % 1 >= 0.5) return ceil(num)
-    return flr(num)
+function round(num, nearest)
+    nearest = nearest or 1
+    num *= nearest
+    if (num % 1 >= 0.5) return ceil(num)/nearest
+    return flr(num)/nearest
 end
 
-function sprPal(s, x, y, tbl)
-    for k,v in pairs(tbl) do
-        pal(k, v, 0)
-    end
-    spr(s, x, y)
-    pal(0)
+function mirrorX(a)
+    return atan2(-cos(a), sin(a))
 end
+
+function mirrorY(a)
+    return atan2(cos(a), -sin(a))
+end
+
+function pow(x, y) --only works when y is an int > 0
+    local num = 1
+    for i=0, y do 
+        num *= x
+    end
+    return num
+end
+
+function wait(frames)
+    for i=1,frames do
+        yield()
+    end
+end
+
 
 end

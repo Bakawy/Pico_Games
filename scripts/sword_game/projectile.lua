@@ -9,6 +9,7 @@ Projectile = Class:new({
     traveled = 0,
     size = 2,
     color = 0,
+    sprite = nil,
     dead = false,
     move = function(_ENV) 
         x += speed * cos(dir)
@@ -23,7 +24,17 @@ Projectile = Class:new({
             end
         end
     end,
+    draw = function(_ENV)
+        if sprite then
+            local halfSize = size
+            local sx, sy = (sprite % 16) * 8, flr(sprite / 16) * 8
+            sspr(sx, sy, 8, 8, x - halfSize, y - halfSize, size * 2, size * 2)
+        else
+            circfill(x, y, size, color)
+        end
+    end,
     onEnemy = function() end,
+    onDead = function () end,
 })
 projectiles = {}
 
@@ -31,13 +42,16 @@ function updateProjectiles()
     for p in all(projectiles) do
         p:move()
         p:collide()
-        if (p.dead) del(projectiles, p)
+        if p.dead then 
+            p:onDead()
+            del(projectiles, p) 
+        end
     end
 end
 
 function drawProjectiles()
     for p in all(projectiles) do
-        circfill(p.x, p.y, p.size, p.color)
+        p:draw()
     end
 end
 

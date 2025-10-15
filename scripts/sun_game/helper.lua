@@ -1,5 +1,9 @@
 do
 
+function randDec(min, max)
+    return rnd(max - min) + min
+end
+
 function dist(x1, y1, x2, y2)
     local dx = (x2 - x1) / 16
     local dy = (y2 - y1) / 16
@@ -20,6 +24,23 @@ function debugPrint(text, x, y, col)
     print("", 0, 0)
     setCamera(camx, camy)
     lastx, lasty, lastcol = x, y, col
+end
+
+function sprPal(s, x, y, tbl)
+    local trans = {}
+    for k,v in pairs(tbl) do
+        if v == -1 then
+            palt(k, true)
+            add(trans, k)
+        else
+            pal(k, v, 0)
+        end
+    end
+    spr(s, x, y)
+    pal(0)
+    for col in all(trans) do 
+        palt(col, false)
+    end
 end
 
 end

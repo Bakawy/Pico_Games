@@ -8,6 +8,7 @@ Enemy = Class:new({
     dead=false,
     fireRate = 1,
     fireTimer = 0,
+    accuracy = 0.1,
     checkPlayer=function(_ENV)
         local px, py, pr = getPlayerPos()
         local playerDist =  dist(x, y, px, py)
@@ -17,6 +18,7 @@ Enemy = Class:new({
             if scoreRadius < 3 then
                 global.score += 1
                 dead = true
+                Enemy:new({x=randDec(-bounds, bounds), y=randDec(-bounds, bounds)}, enemies)
             end
         end
     end,
@@ -34,11 +36,13 @@ Enemy = Class:new({
     end,
     shoot=function(_ENV)
         local px, py = getPlayerPos()
-        local dir = atan2(px - x, py - y)
+        local dir = atan2(px - x, py - y) + randDec(-accuracy/2, accuracy/2)
         add(projectiles, Projectile:new({
             x = x,
             y = y,
-            speed = 1,
+            speed = 0,
+            maxSpeed = 1,
+            dSpeed = 1/60,
             dir = dir,
             radius = 3,
             col = 9,

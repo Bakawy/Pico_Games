@@ -8,7 +8,7 @@ Particle = Class:new({
     dx = 0,
     ddx = 0,
     y = 64,
-    dy = 64,
+    dy = 0,
     ddy = 0,
     col = 0,
     update = function(_ENV)
@@ -19,6 +19,12 @@ Particle = Class:new({
         y += dy
         r += dr
         len -= 1
+
+        if x - r > 128 and dx >= 0 and ddx >= 0 then
+            len = 0
+        elseif x + r < 0 and dx <= 0 and ddx <= 0 then
+            len = 0
+        end
     end,
     draw = function(_ENV)
         circfill(x, y, r, col)

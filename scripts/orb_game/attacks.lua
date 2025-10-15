@@ -24,9 +24,9 @@ local attackTable = {
     },
     slash = {
         path = {
-            {x=0, y=-8, len=5},
+            {x=-4, y=-8, len=5},
             {x=8, y=0, len=5},
-            {x=0, y=8}
+            {x=-4, y=8}
         },
         endLag = 5,
         push = {mag=2, dir=0.125},
@@ -73,7 +73,7 @@ local attackTable = {
         },
         kb = {mag=4, dir=0.225},
         endLag = 5,
-        hs = 5,
+        hs = 10,
         size = 8,
     },
     stab = {

@@ -1,3 +1,10 @@
 * WarioWare with randomized modular minigames
 * (using WASD and D-pad) controlling 2 little guys and fighting 1 big guy
 * Get resources on idle game and use them to play active game and get more resources (like UFO 50 Pilot Quest)
+└Make food then distribute food in a goofy fantastical way
+*https://embed.tumblr.com/embed/post/nOLSmbNiKX0WGuqKP7pF9g/136251375090
+└Tower Defense game with more improv and action than strategy
+└enemies drop tools the player uses for combat (probably requires artist) 
+
++ A complete arcade game with a definite ending and a UFO 50 like difficulty curve
++ A balatro like game (strategize different passive abilities to meet a certain score) but in an action game rather than a stragety game

@@ -76,8 +76,40 @@ function rspr(sx,sy,sw,sh,a,dx,dy,dw,dh)
 end
 
 function centerPrint(text, x, y, col)
-    local len = print(text, 0, -12) - 1
-    print(text, x - ceil(len/2), y - 2, col)
+    local len = print(text, 0, -12)
+    print(text, x - len/2, y - 2, col)
+end
+
+function spawnBackgroundParticles()
+    for i=1,100-#particles do 
+        local r = randDec(1, 16)
+        local dir = sgn(randDec(-1, 1))
+        Particle:new({
+            x = dir == 1 and -r or 128+r,
+            dx = randDec(0.1, 0.5) * dir,
+            y = randDec(0, 128),
+            r = r,
+            col = rnd({4,5,6,7,8,9,10,11,12}),
+            len = 1000000,
+        }, particles)
+    end
+end
+
+function sprPal(s, x, y, tbl)
+    local trans = {}
+    for k,v in pairs(tbl) do
+        if v == -1 then
+            palt(k, true)
+            add(trans, k)
+        else
+            pal(k, v, 0)
+        end
+    end
+    spr(s, x, y)
+    pal(0)
+    for col in all(trans) do 
+        palt(col, false)
+    end
 end
 
 end

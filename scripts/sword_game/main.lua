@@ -11,8 +11,10 @@ frame = 0
 roundTimer = 0
 roundTime = 20 * 60
 roundCount = 0
-gameState = 0
+gameState = 4
 cam = {x=64, y=64}
+cartdata("sword_game")
+score = 0
 mainPal = {
     [0] = -1,
     [1] = 0,
@@ -27,8 +29,8 @@ mainPal = {
     [10] = 14,
     [11] = -9,
     [12] = 12,
-    [13] = 7,
-    [14] = 7,
+    [13] = -13,
+    [14] = -6,
     [15] = 7,
 } 
 global = _ENV
@@ -36,42 +38,54 @@ showHitbox = false
 
 function _init()
     poke(0x5f2d, 0x1 + 0x2)
-    menuitem(1, "swap weapon", swapWeapon)
-    menuitem(2, "infinite color", debugInfiniteColors)
-    menuitem(3, "toggle hitbox", function()
+    poke(0x5f5c, 255)
+    menuitem(1, "infinite color", debugInfiniteColors)
+    menuitem(2, "toggle hitbox", function()
         showHitbox = not showHitbox
     end)
+    menuitem(3, "reset save data", function()
+        for i=0, 63 do 
+            dset(i, 0)
+        end
+    end)
     pal(mainPal, 1)
-    spawnEnemy(3)
+    initWeaponMenu()
 end
 
 function _update60()
     updateCursor()
+    updateParticles()
     if gameState == 0 then
         deltaTime = 60 / stat(7)
-        cls(2)
+        cls(13)
         updatePlayer()
         updateEnemies()
         updateProjectiles()
-        updateParticles()
 
         --cam.x, cam.y = getPlayerPos()
         
         if (roundTimer >= roundTime) then
             gameState = 1
             initDrawMenu()
+            projectiles = {}
             roundTimer = 0
         end
         roundTimer += 1
     elseif gameState == 1 then
         cls(0)
+
         updateDrawMenu()
     elseif gameState == 2 then
-        cls(3)
+        cls(14)
         updateCombineMenu()
     elseif gameState == 3 then
         cls(1)
         if (btnp(4) or btnp(5)) run()
+        local weapon = getWeapon()
+        if (score > dget(weapon)) dset(weapon, score)
+    elseif gameState == 4 then
+        cls(3)
+        updateWeaponMenu()
     end
     --camera(randDec(-2, 2), randDec(-2, 2))
     --_draw()
@@ -88,12 +102,18 @@ function _draw()
         drawPlayer()
         drawParticles()
     elseif gameState == 1 then
+        drawParticles()
         drawDrawMenu()
     elseif gameState == 2 then
+        drawParticles()
         drawCombineMenu()
     elseif gameState == 3 then
         centerPrint(":(", 64, 64, 3)
         centerPrint("click to restart", 64, 70, 3)
+        centerPrint("score: "..score, 64, 76, 3)
+    elseif gameState == 4 then
+        drawParticles()
+        drawWeaponMenu()
     end
     drawCursor()
     drawDebug()
@@ -103,7 +123,7 @@ function drawDebug()
     camera()
     print(flr(stat(1)*100).."% cpu", 1, 1, 12)
     if gameState == 0 then
-        print("wasd to move")
+        print("score: "..score)
         --print("rmb to change weapon sprite")
         local text = "timer "..ceil((roundTime - roundTimer)/60)
         print(text, 96 - #text * 3, 1, 1)
@@ -119,6 +139,10 @@ function initGame()
     roundCount += 1
     spawnEnemy(3 + roundCount/3)
     roundTime = (20 + 2 * roundCount) * 60
+
+    for p in all(particles) do 
+        p.dx *= 20
+    end
 end
 
 function ttn(input)--table btn

@@ -122,9 +122,6 @@ local function applyDI()
         dir += rotation
     end
 
-
-
-
     xVel = mag * cos(dir)
     yVel = mag * sin(dir)
 end
@@ -239,12 +236,12 @@ function updatePlayer()
     end
     yVel += gravity
 
-    --headSprite = btn(2) and 18 or 17
     if noInput < 0 and knocked < 0 then 
         applyInput()
     elseif knocked > 0 and noInput < 0 then
         applyDI()
         animation = grounded and 0 or 2
+        headSprite = btn(2) and 18 or 17
     end
 
     if btnp(4) and grounded then
