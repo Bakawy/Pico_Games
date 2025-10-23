@@ -155,4 +155,96 @@ function linefill(ax,ay,bx,by,r,c)
     end
 end
 
+function coordToTile(x, y)
+	return flr(x / 8), flr(y / 8)
+end
+function coordToTiletbl(x, y)
+	return {flr(x / 8), flr(y / 8)}
+end
+
+
+-- line of sight with PIXEL inputs
+-- returns true if unobstructed
+-- uses sprite flag 0 as "solid" (change FLAG_SOLID if needed)
+
+local TILE_SIZE = 8
+local MAP_W_TILES = 128
+local MAP_H_TILES = 64
+local FLAG_SOLID = 0
+local HUGE = 32767
+
+function los(x1_px, y1_px, x2_px, y2_px)
+  -- convert to tile coords (floating)
+  local x1 = x1_px / TILE_SIZE
+  local y1 = y1_px / TILE_SIZE
+  local x2 = x2_px / TILE_SIZE
+  local y2 = y2_px / TILE_SIZE
+
+  local sx, sy = flr(x1), flr(y1)
+  local tx, ty = flr(x2), flr(y2)
+
+  -- same-tile early out
+  if sx == tx and sy == ty then return true end
+
+  local dx = x2 - x1
+  local dy = y2 - y1
+  local stepx = (dx > 0) and 1 or -1
+  local stepy = (dy > 0) and 1 or -1
+
+  local mapx, mapy = sx, sy
+
+  -- DDA "time" per tile step along x/y
+  local delta_dist_x = (dx == 0) and HUGE or abs(1 / dx)
+  local delta_dist_y = (dy == 0) and HUGE or abs(1 / dy)
+
+  -- distance to first grid boundary
+  local side_dist_x = (dx > 0) and ((sx + 1 - x1) * delta_dist_x)
+                               or  ((x1 - sx)     * delta_dist_x)
+  local side_dist_y = (dy > 0) and ((sy + 1 - y1) * delta_dist_y)
+                               or  ((y1 - sy)     * delta_dist_y)
+
+  for i=1, 256 do
+    -- step to next tile boundary
+    if side_dist_x < side_dist_y then
+      side_dist_x += delta_dist_x
+      mapx += stepx
+    else
+      side_dist_y += delta_dist_y
+      mapy += stepy
+    end
+
+    -- bounds (no wrap)
+    if mapx < 0 or mapy < 0 or mapx >= MAP_W_TILES or mapy >= MAP_H_TILES then
+      return false
+    end
+
+    -- reached target tile?
+    if mapx == tx and mapy == ty then
+      return true
+    end
+
+    -- blocked by solid tile?
+    if fget(mget(mapx, mapy), FLAG_SOLID) then
+      return false
+    end
+  end
+
+  return false
+end
+
+function trian(a,b,c,d,e,f,g) --https://www.lexaloffle.com/bbs/?pid=tri by dw817
+  local h,i=a-c,b-d
+  local j,k,l,m=abs(h),abs(i),c,d
+  j=max(1,max(j,k))
+  for n=0,j do
+    line(c,d,e,f,g)
+    line(c+1,d,e+1,f)
+    c+=h/j d+=i/j
+  end
+  pset(a,b,8)
+  pset(l,m,11)
+  pset(e,f,12)
+end
+
+
 end

@@ -1,10 +1,12 @@
 do 
 
 gravity = 0.2
+frame = 0
 
 function _init()
     poke(0x5f5c, 255)
     Enemy:new({x=32,y=64}, enemies)
+    initNav()
 end
 
 function _update60()
@@ -15,6 +17,7 @@ function _update60()
     updateAttacks()
     updateOrb()
     updateEnemies()
+    frame += 1
 end
 
 function _draw()
@@ -22,6 +25,10 @@ function _draw()
     drawPlayer()
     drawEnemies()
     print(flr(stat(1)*100).."% cpu", 1, 1, 12)
+end
+
+local function generateLevel()
+    
 end
 
 Class = setmetatable({
