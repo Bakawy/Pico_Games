@@ -1,17 +1,17 @@
 pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
-#include scripts/sword_game/main.lua
-#include scripts/sword_game/helper.lua
-#include scripts/sword_game/cursor.lua
-#include scripts/sword_game/player.lua
-#include scripts/sword_game/drawHelper.lua
-#include scripts/sword_game/enemy.lua
-#include scripts/sword_game/projectile.lua
-#include scripts/sword_game/drawMenu.lua
-#include scripts/sword_game/combineMenu.lua
-#include scripts/sword_game/particle.lua
-#include scripts/sword_game/weaponMenu.lua
+#include ../scripts/sword_game/main.lua
+#include ../scripts/sword_game/helper.lua
+#include ../scripts/sword_game/cursor.lua
+#include ../scripts/sword_game/player.lua
+#include ../scripts/sword_game/drawHelper.lua
+#include ../scripts/sword_game/enemy.lua
+#include ../scripts/sword_game/projectile.lua
+#include ../scripts/sword_game/drawMenu.lua
+#include ../scripts/sword_game/combineMenu.lua
+#include ../scripts/sword_game/particle.lua
+#include ../scripts/sword_game/weaponMenu.lua
 
 
 __gfx__

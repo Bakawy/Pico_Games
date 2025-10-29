@@ -232,19 +232,22 @@ function los(x1_px, y1_px, x2_px, y2_px)
   return false
 end
 
-function trian(a,b,c,d,e,f,g) --https://www.lexaloffle.com/bbs/?pid=tri by dw817
-  local h,i=a-c,b-d
-  local j,k,l,m=abs(h),abs(i),c,d
+function trian(x1,y1,x2,y2,x3,y3,col) --https://www.lexaloffle.com/bbs/?pid=tri by dw817
+  local h,i=x1-x2,y1-y2
+  local j,k,l,m=abs(h),abs(i),x2,y2
   j=max(1,max(j,k))
   for n=0,j do
-    line(c,d,e,f,g)
-    line(c+1,d,e+1,f)
-    c+=h/j d+=i/j
+    line(x2,y2,x3,y3,col)
+    line(x2+1,y2,x3+1,y3)
+    x2+=h/j y2+=i/j
   end
-  pset(a,b,8)
-  pset(l,m,11)
-  pset(e,f,12)
+  --pset(x1,y1,8)
+  --pset(l,m,11)
+  --pset(x3,y3,12)
 end
 
+function randint(min, max)
+    return flr(rnd(max - min + 1)) + min
+end
 
 end

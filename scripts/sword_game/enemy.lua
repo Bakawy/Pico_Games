@@ -1,6 +1,7 @@
 do
 
 local spawnDuration = 60
+local px, py, pr = 64, 64, 8
 
 local function checkWeapon(enemy)
 
@@ -11,7 +12,6 @@ local function checkWeapon(enemy)
     end
 
     local hitboxes, wv, _, direct = getHitbox()
-    local px, py = getPlayerPos()
     for h in all(hitboxes) do
         if (isSwing() and dist(enemy.x, enemy.y, h.x, h.y) < enemy.size + h.r) then
             addAmmo()
@@ -48,9 +48,11 @@ Enemy = Class:new({
     spawn = 0,
     noHit = 0,
     col = 0,
-    toh = true, --Trigger On Hit
+    onHit = nil,
+    onUpdate = nil,
+    onPlayer = nil,
+    toh = true, --Trigger Weapon On Hit
     behavior = function(_ENV) 
-        local px, py = getPlayerPos()
         local dir = atan2(px - x, py - y)
         return {mag=1,dir=dir}
     end,
@@ -74,7 +76,10 @@ Enemy = Class:new({
         if hit then
             if (toh) triggerOnHit()
             toh = true
-            local a, b, dmg = getHitbox()
+            local flag
+            if (onHit) flag = onHit(_ENV)
+            if (flag) goto skip
+            local _, _, dmg = getHitbox()
             push = {mag=dmg * kb * def, dir=hit}
             hit = false
 
@@ -100,6 +105,8 @@ Enemy = Class:new({
 
             sfx(4)
         end
+        ::skip::
+        if (onUpdate) onUpdate(_ENV)
     end,
     move = function(_ENV)
         if push.mag > 0 then
@@ -122,10 +129,10 @@ Enemy = Class:new({
     end,
     checkPlayerCol = function(_ENV, velDir)
         if (push.mag > 0) return
-        local px, py, pr = getPlayerPos()
         if dist(x, y, px, py) < size + pr then
-            playerHit(velDir)
+            playerHit(velDir, dmg)
             stun = 15
+            if (onPlayer) onPlayer(_ENV)
         end
     end,
 })
@@ -156,16 +163,13 @@ end
 function spawnEnemy(count)
     count = count or 1
     for i=1,count do
-        local t = rnd({4, 5, 6})
+        local t = rnd({4, 5, 6, 7, 8, 9, 10, 11, 12})
         local tTable = {
             [4] = {
-                dmg=10,
-                speed=0.3,
-                def=1,
+                dmg=5.5,
                 state=0,
                 behavior = function(_ENV)
                     local mag = 1
-                    local px, py = getPlayerPos()
                     local dir = atan2(px - x, py - y)
                     local playerDist = dist(x, y, px, py)
                     local targetDist = 28
@@ -189,14 +193,249 @@ function spawnEnemy(count)
                 end,
             },
             [5] = {
-                dmg=5,
                 speed=0.6,
-                def=1,
             },
             [6] = {
-                dmg=5,
-                speed=0.3,
-                def=0.75,
+                def=0.85,
+                size=6,
+            },
+            [7] = {
+                state=0,
+                moveLine=nil,
+                lineDir=nil,
+                dmg=5.5,
+                speed=0.45,
+                col = col, --cuz vscode says its an error without this
+                onHit = function (_ENV)
+                    moveLine=nil
+                    state=0
+                    lineDir=0
+                end,
+                behavior = function(_ENV)
+                    local mag = 1
+                    local dir = atan2(px - x, py - y)
+                    local playerDist = dist(x, y, px, py)
+                    local targetDist = 32
+
+                    if state < 0 then
+                        mag = 4.5
+                        linefill(moveLine[1],moveLine[2],moveLine[3],moveLine[4],1.125,col)
+                        if dist(x, y, moveLine[3], moveLine[4]) < size then 
+                            onHit(_ENV)
+                        end
+                        return {mag=mag,dir=lineDir}
+                    end
+
+                    if state > 0 then
+                        moveLine[3] += 2 * cos(lineDir)
+                        moveLine[4] += 2 * sin(lineDir)
+                        if moveLine[3] != mid(2, moveLine[3], 126) or moveLine[4] != mid(2, moveLine[4], 126) then
+                            state = 1000
+                        end
+
+                        state += 1
+                        if (state >= 33) state = -1
+                        linefill(moveLine[1],moveLine[2],moveLine[3],moveLine[4],1.125,col)
+                        return {mag=0,dir=lineDir}
+                    end
+
+                    if playerDist == mid(targetDist - 2, playerDist, targetDist + 2) and push.mag <= 0 then
+                        state += 1
+                        lineDir=dir
+                        moveLine = {x,y,x,y}
+                    end
+
+                    if (playerDist < targetDist - 2) dir -= 0.5
+
+                    return {mag=mag,dir=dir}
+                end,
+            },
+            [8] = {
+                dmg=5.5,
+                tps=2,
+                onHit = function(_ENV)
+                    local direction = atan2(px - x, py - y)
+                    --local distance = dist(x, y, px, py)
+                    x = px + 20 * cos(direction)
+                    y = py + 20 * sin(direction)
+                    hit = false
+
+                    local len = 15
+                    local radius = 12
+                    Particle:new({
+                        x = x,
+                        y = y,
+                        r = radius,
+                        dr = -radius/len,
+                        len = len,
+                        col = col
+                    },particles)
+
+                    tps -= 1
+                    if tps <= 0 then
+                        onHit = nil
+                    end
+                    return true
+                end,
+            },
+            [9] = {
+                spawnInterval=4,
+                spawnTimer = 0,
+                speed=0.45,
+                onUpdate = function(_ENV)
+                    --if (push.mag > 0) return
+                    spawnTimer -= 1
+                    if spawnTimer <= 0 then
+                        spawnTimer = spawnInterval
+                        Projectile:new({
+                            x = x,
+                            y = y,
+                            len = spawnInterval * 50,
+                            size = size,
+                            col = col,
+                            onPlayer = function(_ENV)
+                                playerHit(atan2(px - x, py - y))
+                            end,
+                            draw = function(_ENV)
+                                fillp(▒)
+                                circfill(x,y,size,col)
+                                fillp()
+                            end
+                        }, projectiles)
+                    end
+                end,
+            },
+            [10] = {
+                size = 8,
+                def = 0.5,
+                state = 0,
+                dmg = 6.5,
+                moveDir = nil,
+                moveSpeed = 0,
+                behavior = function(_ENV)
+                    local mag = 1
+                    local dir = atan2(px - x, py - y)
+                    local playerDist = dist(x, y, px, py)
+
+                    if state < 0 then
+                        state += 1
+                        return {mag=0,dir=dir}
+                    end
+
+                    if state > 0 then
+                        moveSpeed += 0.2
+                        if x != mid(size, x, 128-size) or y != mid(size, y, 128-size) then 
+                            onPlayer(_ENV)
+                            moveSpeed = 0
+                        end
+                        return {mag=moveSpeed,dir=moveDir}
+                    end
+
+                    if x == mid(size, x, 128-size) and y == mid(size, y, 128-size) then 
+                        moveDir = dir
+                        state = 1
+                        moveSpeed = 0
+                    else
+                        dir = atan2(64 - x, 64 - y)
+                    end
+
+                    return {mag=mag,dir=dir}
+                end,
+                onHit = function(_ENV)
+                    state = -30
+                end,
+                onPlayer = function(_ENV)
+                    local len = 30
+                    if state > 0 then
+                        state = -len
+                        x = mid(size, x, 128-size)
+                        y = mid(size, y, 128-size)
+                        Projectile:new({
+                            x = x,
+                            y = y,
+                            len = len,
+                            size = size - 1,
+                            dsize = 16/len,
+                            col = col,
+                            onPlayer = function(_ENV)
+                                playerHit(atan2(px - x, py - y), 7)
+                            end,
+                            draw = function(_ENV)
+                                circfill(x,y,size+2,col)
+                                circfill(x,y,size,13)
+                            end
+                        }, projectiles)
+                    end
+                end
+            },
+            [11] = {
+                size = 8,
+                def = 0.5,
+                state = 0,
+                speed = 1.75,
+                dmg=3,
+                moveDir = nil,
+                behavior = function(_ENV)
+                    local mag = 1
+                    local dir = atan2(px - x, py - y)
+                    local playerDist = dist(x, y, px, py)
+                    if state > 0 then
+                        if (x != mid(size, x, 128-size) or y != mid(size, y, 128-size)) and push.mag <= 0 then 
+                            moveDir = dir
+                        end
+                        return {mag=mag,dir=moveDir}
+                    end
+
+                    moveDir = dir
+                    state = 1
+
+                    return {mag=mag,dir=dir}
+                end,
+                onHit = function(_ENV)
+                    moveDir = (0.5 - moveDir) % 1
+                end,
+                onPlayer = function(_ENV)
+                    if state > 0 then
+                        local a = moveDir
+                        local n = atan2(x - px, y - py)
+                        moveDir = a - 2 * dot(a, n) * n
+                        stun = 0
+                    end
+                end
+            },
+            [12] = {
+                x = randDec(56,72),
+                y = randDec(56,72),
+                size = 8,
+                def = 0.5,
+                fireTimer = 30,
+                fireRate = 1,
+                behavior = function(_ENV)
+                    local mag = 1
+                    local dir = atan2(px - x, py - y)
+                    --local playerDist = dist(x, y, px, py)
+                    fireTimer -= 1
+                    if fireTimer <= 0 then
+                        fireTimer = 60 / fireRate
+                        Projectile:new({
+                            x = x,
+                            y = y,
+                            speed = 1,
+                            dir = dir,
+                            range = 200,
+                            size = 4,
+                            col = col,
+                            onPlayer = function(_ENV)
+                                playerHit(atan2(px - x, py - y))
+                                dead = true
+                            end,
+                            onWeapon = function(_ENV,h)
+                                if (isSwing()) dead = true
+                            end
+                        }, projectiles)
+                    end
+                    return {mag=0,dir=dir}
+                end,
             },
         }
         local enemy = {
@@ -212,6 +451,7 @@ function spawnEnemy(count)
 end
 
 function updateEnemies()
+    px, py, pr = getPlayerPos()
     for e in all(enemies) do
         e:update()
         if e.dead then

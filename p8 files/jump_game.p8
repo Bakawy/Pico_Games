@@ -15,15 +15,15 @@ Game States
 Cart Data
 0 - highscore
 ]]
-#include scripts/jump_game/helper.lua
-#include scripts/jump_game/game.lua
-#include scripts/jump_game/player.lua
-#include scripts/jump_game/particles.lua
-#include scripts/jump_game/tile.lua
-#include scripts/jump_game/environment.lua
-#include scripts/jump_game/enemy.lua
-#include scripts/jump_game/menu.lua
-#include scripts/jump_game/main.lua
+#include ../scripts/jump_game/helper.lua
+#include ../scripts/jump_game/game.lua
+#include ../scripts/jump_game/player.lua
+#include ../scripts/jump_game/particles.lua
+#include ../scripts/jump_game/tile.lua
+#include ../scripts/jump_game/environment.lua
+#include ../scripts/jump_game/enemy.lua
+#include ../scripts/jump_game/menu.lua
+#include ../scripts/jump_game/main.lua
 
 __gfx__
 000000003333333300000000aaaaaaaa000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

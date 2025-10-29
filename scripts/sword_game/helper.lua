@@ -46,5 +46,8 @@ function wait(frames)
     end
 end
 
+function dot(a1, a2)
+  return cos(a1)*cos(a2) + sin(a1)*sin(a2)
+end
 
 end

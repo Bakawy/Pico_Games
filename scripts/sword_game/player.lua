@@ -60,6 +60,7 @@ local spriteData = {
                             dir=weaponUnwrap % 1, 
                             speed=2, 
                             range=96,
+                            size=3,
                             onEnemy = function(_ENV, e)
                                 dead = true
                                 e.hit = dir
@@ -75,7 +76,7 @@ local spriteData = {
         setSpecial = function (special)
             special /= 3
             maxClickCD = 30 + special
-            debugSpecial = 1 + special
+            debugSpecial = flr(1 + special)
         end,
         hitboxes = {
             {
@@ -187,7 +188,7 @@ local spriteData = {
                 end,
                 draw = function (_ENV)
                     local x, y = _ENV.x, _ENV.y
-                    circfill(x, y, size, color)
+                    circfill(x, y, size, col)
                     linefill(x + size * 2 * cos(aim), y + size * 2 * sin(aim), x, y, size, col)
                 end,
             }, projectiles)
@@ -200,7 +201,9 @@ local spriteData = {
         mccd = 40,
         ammo = 5,
         setSpecial = function(special)
-            debugSpecial = 8 + 24 * (special/126)
+            local a = 1 - special/126
+            local b = 1 - a * a
+            debugSpecial = 8 + 24 * b
         end,
         onClick = function()
             if ammo > 0 then
@@ -219,12 +222,8 @@ local spriteData = {
                         Projectile:new({
                             x=_ENV.x, 
                             y=_ENV.y, 
-                            len=120,
+                            len=300,
                             size=debugSpecial,
-                            move = function(_ENV)
-                                len -= 1
-                                if (len <= 0) dead = true
-                            end,
                             onEnemy = function(_ENV, e)
                                 local dir = atan2(e.x - _ENV.x, e.y - _ENV.y)
                                 e.hit = dir
@@ -259,7 +258,7 @@ local spriteData = {
             },
         },
         setSpecial = function(special)
-            debugSpecial = 1 + flr(9 * sqrt(special / 72))
+            debugSpecial = 1 + flr(14 * sqrt(special / 72))
         end,
         onClick = function()
             if ammo > 0 then
@@ -359,7 +358,7 @@ local spriteData = {
 }
 
 function playerHit(dir, dmg)
-    dmg = dmg or 5
+    dmg = dmg or 4.5
     if (invincible > 0) return
     push = {mag=dmg, dir=dir}
     invincible = 10
@@ -440,11 +439,18 @@ function triggerOnHit()
 end
 
 local function applyInputs()
-    local speed = 0.75 * deltaTime
-    if ttn(L) then x -= speed end
-    if ttn(R) then x += speed end
-    if ttn(U) then y -= speed end
-    if ttn(D) then y += speed end
+    local speed = 0.775 * deltaTime
+    local dir = {0, 0}
+    if ttn(L) then dir[1] -= 1 end
+    if ttn(R) then dir[1] += 1 end
+    if ttn(U) then dir[2] -= 1 end
+    if ttn(D) then dir[2] += 1 end
+    if dir[1] != 0 or dir[2] != 0 then
+        dir = atan2(dir[1], dir[2])
+        x += speed * cos(dir)
+        y += speed * sin(dir)
+    end
+
     if ttn(X) then 
         if clickCD <= 0 then
             if (spriteData[sprite]["onClick"]) spriteData[sprite]["onClick"]()
@@ -516,9 +522,14 @@ function updatePlayer()
 
     updateWeaponDirectional()
 
-    if (x != mid(-4, x, 132) or y != mid(-4, y, 132)) then 
-        gameState = 3
-        sfx(3)
+    if push.mag > 0 then 
+        if (x != mid(-4, x, 132) or y != mid(-4, y, 132))  then
+            gameState = 3
+            sfx(3)
+        end
+    else
+        x = mid(4, x, 123)
+        y = mid(4, y, 123)
     end
 
     if (stateTimer <= 0 and spriteData[sprite]["onTimer"]) spriteData[sprite]["onTimer"]()

@@ -1,11 +1,11 @@
 pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
-#include scripts/punch_game/main.lua
-#include scripts/punch_game/player.lua
-#include scripts/punch_game/drawHelper.lua
-#include scripts/punch_game/enemy.lua
-#include scripts/punch_game/helper.lua
+#include ../scripts/punch_game/main.lua
+#include ../scripts/punch_game/player.lua
+#include ../scripts/punch_game/drawHelper.lua
+#include ../scripts/punch_game/enemy.lua
+#include ../scripts/punch_game/helper.lua
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

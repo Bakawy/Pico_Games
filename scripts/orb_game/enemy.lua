@@ -1,11 +1,19 @@
 do
 
 local player = getPlayerState()
+--[[
 local basicAttack = {
     {x=-16, y=0, len=15, damaging=false},
     {x=16, y=-6, len=15, speed = 1.5, damaging=true},
     {x=24, y=0, len=15, speed = 1.5},
     endLag = 30,
+}
+]]
+local basicAttack = {
+    targetDist = 32,
+    startLag = 30,
+    endLag = 15,
+    cooldown = 60,
 }
 local playerPath = {}
 local navNodes = {}
@@ -13,15 +21,54 @@ local navNodes = {}
 local function contains(tbl, n) return count(tbl, n) > 0 end
 
 
-local function find_nearest_node(x,y)
+function find_nearest_node(x, y, near)
     local tx, ty = flr(x/8), flr(y/8)
-    local nearest, bestd = nil, 999
+
+    -- decide N (how many "best" to consider)
+    local N
+    if near == true then
+        N = 3
+    elseif type(near) == "number" then
+        N = max(1, flr(near))
+    else
+        N = 1
+    end
+
+    if N == 1 then
+        -- original behavior: just the best
+        local nearest, bestd = nil, 32767
+        for n in all(navNodes) do
+            local d = abs(n.tx - tx) + abs(n.ty - ty)
+            if d < bestd then
+                bestd, nearest = d, n
+            end
+        end
+        return nearest
+    end
+
+    -- keep a running list of the top-N closest
+    local best = {} -- entries: {n=<node>, d=<dist>}
     for n in all(navNodes) do
         local d = abs(n.tx - tx) + abs(n.ty - ty)
-        if d < bestd then bestd, nearest = d, n end
+        if #best < N then
+            add(best, { n = n, d = d })
+        else
+            -- find current worst (max d) in best[]
+            local wi = 1
+            for i = 2, #best do
+                if best[i].d > best[wi].d then wi = i end
+            end
+            if d < best[wi].d then
+                best[wi] = { n = n, d = d }
+            end
+        end
     end
-    return nearest
+
+    -- pick a random one among the top-N (if any)
+    local pick = rnd(best) -- pico-8 rnd(list) picks a random element
+    return pick and pick.n or nil
 end
+
 
 local function heuristic(a,b)
     return abs(a.tx - b.tx) + abs(a.ty - b.ty)
@@ -120,22 +167,20 @@ Enemy = Class:new({
     noInput = 0,
     knocked = 0,
     grounded = false,
+    facing = true,
     hitStun = 0,
     dead = false,
     speed = 0.5,
     canSeePlayer = false,
-    target = {x=64,y=64},
     wallTouch = false,
-    runAway = false,
     kbMult = 1,
+    sprState = 0,
 
     attackCD = 0,
     attackData = basicAttack,
-    attackAnchor = {x=64,y=64},
     behavior = "idle",
     currentAttackIndex = 1,
     attackTimer = 0,
-    attackStartTime = 0,
     attackDir = 1,
     damaging = false,
 
@@ -147,7 +192,7 @@ Enemy = Class:new({
     
     planPathToPlayer = function(_ENV)
         local start = find_nearest_node(x, y)
-        local goal = find_nearest_node(player.x, player.y)
+        local goal = find_nearest_node(player.x, player.y, 3)
         if not start or not goal then
             path = {}
             return
@@ -162,7 +207,7 @@ Enemy = Class:new({
     end,
 
     followPath = function(_ENV)
-        drawNav(path)
+        --drawNav(path)
         if not path or #path < 2 then return end
 
         local node = path[pathIndex]
@@ -194,7 +239,7 @@ Enemy = Class:new({
             wx, wy = node.tx * 8 + 4, node.ty * 8 + 4
             dx, dy = wx - x, wy - y
         end
-        circfill(wx, wy, 3, 9)
+        --circfill(wx, wy, 3, 9)
 
         --centerPrint(temp, wx, wy-6, 9)
 
@@ -207,41 +252,17 @@ Enemy = Class:new({
             -- jump if node is above us
             yVel = jumpVel
         end
-    end,
-
-    followTarget = function(_ENV, targetDist, speed)
-        targetDist = targetDist or 0
-        speed = speed or _ENV.speed
-        local jumpStrength = 5
-        local dx = target.x - x
-        local dy = target.y - y
-        local distToTarget = max(0.001, sqrt(dx*dx + dy*dy))
-
-        local dirx = dx / distToTarget
-        local diry = dy / distToTarget
-
-
-        local desiredDir = (distToTarget > targetDist) and 1 or -1
-        if (abs(distToTarget - targetDist) < 4) desiredDir = 0
-        xVel = dirx * speed * desiredDir
-
-
-        if grounded and (y - 4 > target.y) then
-            yVel = -jumpStrength
-            grounded = false
-        end
-
-        if yVel < -jumpStrength/3 and y < target.y then
-            yVel = -jumpStrength/3
-        end
-        return desiredDir
+        return dir
     end,
 
     idle = function(_ENV)
         if (canSeePlayer) behavior = "follow"
+        sprState = 4
     end,
     follow = function(_ENV)
         pathTimer += 1
+        sprState = 0
+        local distToPlayer = dist(x, y, player.x, player.y)
 
         -- Recalculate path if timer expires or player moved far
         if pathTimer > pathRecalcDelay or not path or #path == 0 then
@@ -249,57 +270,27 @@ Enemy = Class:new({
             pathTimer = 0
         end
 
-        followPath(_ENV)
+        if (distToPlayer >= attackData.targetDist or not canSeePlayer) facing = followPath(_ENV) == 1
 
-        -- optional: if close enough to player, attack
-        local distToPlayer = dist(x, y, player.x, player.y)
-        if distToPlayer < 16 and grounded and attackCD <= 0 then
-            attackAnchor.x, attackAnchor.y = x, y
+        if distToPlayer < attackData.targetDist and grounded and attackCD <= 0 and canSeePlayer then
             behavior = "attack"
             attackTimer = 0
-            attackStartTime = 0
-            currentAttackIndex = 1
-            baseSpeed = speed
             attackDir = sgn(player.x - x)
         end
     end,
-
     attack = function(_ENV)
-        local currentPoint = attackData[currentAttackIndex]
-        local nextPoint = attackData[currentAttackIndex + 1]
-        local distToTarget = dist(x, y, target.x, target.y)
-
-        if attackTimer > currentPoint.len + attackStartTime or distToTarget < 8 then
-            attackStartTime = attackTimer
-            currentAttackIndex += 1
-            currentPoint = attackData[currentAttackIndex]
-            nextPoint = attackData[currentAttackIndex + 1]
-
-            --target.x, target.y = currentPoint.x + attackAnchor.x, currentPoint.y + attackAnchor.y
-            --if (currentPoint.speed) speed = currentPoint.speed
-            if currentAttackIndex > #attackData then
-                behavior = "idle"
-                target.x, target.y = x, y
-                speed = baseSpeed
-                noInput = attackData.endLag
-                attackCD = 60
-                damaging = false
-                return
-            end
-            if (currentPoint.damaging != nil) damaging = currentPoint.damaging
+        if attackTimer > attackData.startLag + attackData.endLag then
+            behavior = "idle"
+            attackCD = attackData.cooldown
+        elseif attackTimer == attackData.startLag then
+            sprState = 3
+            local dir = facing and 1 or -1
+            Bullet:new({x=x,y=y,r=2,col=9,dx=dir,range=64}, bullets)
+        elseif attackTimer < attackData.startLag then
+            facing = player.x > x
+            sprState = 2
         end
-
-        target.x, target.y = currentPoint.x * attackDir + attackAnchor.x, currentPoint.y + attackAnchor.y
-
         attackTimer += 1
-        followTarget(_ENV, 0, currentPoint.speed)
-        if checkPlayerCollison(_ENV) and damaging then
-            pushPlayer(3, atan2(x - player.x, y - player.y), 30)
-            setPlayerHS(15)
-            --circfill(x, y, 4, 9)
-            --circfill(player.x, player.y, 4, 10)
-            --stop()
-        end
     end,
     
 
@@ -324,10 +315,10 @@ Enemy = Class:new({
                 yVel = knockback.mag * sin(knockback.dir)
                 hitStun = hs
                 knocked = 10
-                runAway = true
                 kbMult += 0.05
                 damaging = false
                 behavior = "idle"
+                sprState = 1
             end
         end
     end,
@@ -352,7 +343,6 @@ Enemy = Class:new({
         grounded = false
         if (down and yCol) then 
             grounded = true 
-            runAway = false
         end
 
         if knocked > 0 and xCol then
@@ -392,17 +382,17 @@ Enemy = Class:new({
         if damaging then
             rect(x - 5, y - 5, x + 4, y + 4, 9)
         end
-        spr(16 + (knocked > 0 and 16 or 0), x - 4, y - 4)
+        spr(15 + 16 * sprState, x - 4, y - 4, 1, 1, not facing)
 
         --centerPrint(dist(xVel, yVel, 0, 0), x, y - 10, 7)
-        centerPrint(behavior, x, y - 16, 7)
+        --centerPrint(behavior, x, y - 16, 7)
         --circfill(target.x, target.y, 2, 12)
-        centerPrint(jumpVel, x, y-24, 7)
+        --centerPrint(jumpVel, x, y-24, 7)
     end,
 })
 enemies = {}
 
-local function tile_is_solid(x,y) return fget(mget(x, y), 0) end
+local function tile_is_solid(x,y) return fget(mget(x, y), 0) and not fget(mget(x, y), 1) end
 
 function updateEnemies()
     player = getPlayerState() 

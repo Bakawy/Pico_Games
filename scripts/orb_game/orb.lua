@@ -39,6 +39,7 @@ end
 
 function updateOrb()
     local playerState = getPlayerState()
+    if (playerState.hitStun > 0) return
     local px, py = playerState.x, playerState.y
     if #path > 0 then
         damaging = true

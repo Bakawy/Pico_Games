@@ -1,12 +1,12 @@
 pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
-#include scripts/space_game/main.lua
-#include scripts/space_game/cursor.lua
-#include scripts/space_game/moon.lua
-#include scripts/space_game/point.lua
-#include scripts/space_game/enemy.lua
-#include scripts/space_game/helper.lua
+#include ../scripts/space_game/main.lua
+#include ../scripts/space_game/cursor.lua
+#include ../scripts/space_game/moon.lua
+#include ../scripts/space_game/point.lua
+#include ../scripts/space_game/enemy.lua
+#include ../scripts/space_game/helper.lua
 __gfx__
 0000000000bbbbbbbb6666bbbbbbb777777bbbbb0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000070bbbbbb667666bbbb7777997777bbb0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

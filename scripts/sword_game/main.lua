@@ -39,6 +39,7 @@ showHitbox = false
 function _init()
     poke(0x5f2d, 0x1 + 0x2)
     poke(0x5f5c, 255)
+    poke(0x5f34,0x2)
     menuitem(1, "infinite color", debugInfiniteColors)
     menuitem(2, "toggle hitbox", function()
         showHitbox = not showHitbox

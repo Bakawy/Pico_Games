@@ -1,6 +1,7 @@
 do
 
-local px, py, pr
+local player = {}
+local px, py, pr = 64, 64, 8
 
 Projectile = Class:new({
     x = 64,
@@ -10,19 +11,18 @@ Projectile = Class:new({
     range = nil,
     traveled = 0,
     len = nil,
-    size = 2,
-    dsize = 0,
+    r = 2,
+    dr = 0,
     col = 0,
     sprite = nil,
     dead = false,
-    onWeapon = nil,
     onEnemy = nil,
     onDead = nil,
     onPlayer = nil,
     move = function(_ENV) 
         x += speed * cos(dir)
         y += speed * sin(dir)
-        size += dsize
+        r += dr
         if range then
             traveled += speed
             if (traveled > range) dead = true
@@ -31,45 +31,41 @@ Projectile = Class:new({
             len -= 1
             if (len <= 0) dead = true
         end
-        if x != mid(-size,x,128+size) or y != mid(-size,y,128+size) then
+        if x != mid(-r,x,128+r) or y != mid(-r,y,128+r) then
             dead = true
         end
     end,
     collide = function(_ENV) 
+        --[[
         if onEnemy then
             for e in all(enemies) do
-                if dist(x, y, e.x, e.y) < size + e.size then
+                if dist(x, y, e.x, e.y) < r + e.r then
                     onEnemy(_ENV, e)
                 end
             end
         end
+        ]]
         if onPlayer then
-            if dist(x, y, px, py) < size + pr then
+            if dist(x, y, px, py) < r + pr then
                 onPlayer(_ENV)
-            end
-        end
-        if onWeapon then
-            for h in all(getHitbox()) do
-                if dist(x, y, h.x, h.y) < size + h.r then
-                    onWeapon(_ENV, h)
-                end
             end
         end
     end,
     draw = function(_ENV)
         if sprite then
-            local halfSize = size
+            local halfSize = r
             local sx, sy = (sprite % 16) * 8, flr(sprite / 16) * 8
-            sspr(sx, sy, 8, 8, x - halfSize, y - halfSize, size * 2, size * 2)
+            sspr(sx, sy, 8, 8, x - halfSize, y - halfSize, r * 2, r * 2)
         else
-            circfill(x, y, size, col)
+            circfill(x, y, r, col)
         end
     end,
 })
 projectiles = {}
 
 function updateProjectiles()
-    px, py, pr = getPlayerPos()
+    player = getPlayerState()
+    px, py, pr = player.x, player.y, player.r
     for p in all(projectiles) do
         p:move()
         p:collide()

@@ -1,12 +1,12 @@
 pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
-#include scripts/sun_game/main.lua
-#include scripts/sun_game/cursor.lua
-#include scripts/sun_game/player.lua
-#include scripts/sun_game/enemy.lua
-#include scripts/sun_game/helper.lua
-#include scripts/sun_game/projectile.lua
+#include ../scripts/sun_game/main.lua
+#include ../scripts/sun_game/cursor.lua
+#include ../scripts/sun_game/player.lua
+#include ../scripts/sun_game/enemy.lua
+#include ../scripts/sun_game/helper.lua
+#include ../scripts/sun_game/projectile.lua
 
 __gfx__
 00000000110000000110011000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

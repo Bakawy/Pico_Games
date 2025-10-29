@@ -5,6 +5,7 @@ local xVel, yVel = 0, 0
 local maxXVel = 2
 local dodgeFrames = 6
 local dodgeDist = 12
+local kbMult = 1
 
 local speed = 1
 local jumpStrength = 3
@@ -18,8 +19,10 @@ local noInput = 0
 local totalNoInput = -100000000
 
 
+local lavaHit = false
 local knocked = 0
 local hitStun = 0
+local hsShake = true
 local jumpBuffer = 0
 local invulnerable = 0
 
@@ -132,14 +135,16 @@ local function movePlayer()
     y, yVel, yCol = move_y(x, y, yVel, size)
     x, xVel, xCol = move_x(x, y, xVel, size)
 
-    if xCol and fget(xCol, 1) and invulnerable <= 0 then
+    if xCol and fget(xCol, 1) and invulnerable <= 0 and not lavaHit then
         pushPlayer(5, xv > 0 and 0.5 or 0, 30)
-        hitStun = 30
+        setPlayerHS(30)
+        lavaHit = true
         return
     end
-    if yCol and fget(yCol, 1) and invulnerable <= 0 then
+    if yCol and fget(yCol, 1) and invulnerable <= 0 and not lavaHit then
         pushPlayer(5, yv > 0 and 0.25 or 0.75, 30)
-        hitStun = 30
+        setPlayerHS(30)
+        lavaHit = true
         return
     end
 
@@ -161,9 +166,6 @@ local function movePlayer()
     end
 
     if (not grounded and not yCol) animation = 2
-    print(xVel, 64, 0)
-    print(yVel)
-    print(jumpBuffer)
 end
 
 function pushPlayer(mag, dir, knockedFrames)
@@ -212,6 +214,8 @@ function getPlayerState()
         noInput = noInput,
         knocked = knocked,
         jumpBuffer = jumpBuffer,
+        hitStun = hitStun,
+        kbMult = kbMult
     }
 end
 
@@ -225,8 +229,14 @@ function setFreefall(bool)
     freefall = bool
 end
 
-function setPlayerHS(frames)
+function setPlayerHS(frames, shake)
+    shake = shake == nil and true or shake
     hitStun = frames
+    hsShake = shake
+end
+
+function addPlayerPerc(perc)
+    kbMult += perc
 end
 
 function updatePlayer()
@@ -238,6 +248,7 @@ function updatePlayer()
 
     if noInput < 0 and knocked < 0 then 
         applyInput()
+        lavaHit = false
     elseif knocked > 0 and noInput < 0 then
         applyDI()
         animation = grounded and 0 or 2
@@ -281,12 +292,13 @@ function drawPlayer()
         sprite = animations[animation].sprites[1]
     end
     local dx, dy = x, y
-    if hitStun > 0 then
+    if hitStun > 0 and hsShake then
         dx += randDec(-1.5, 1.5)
         dy += randDec(-1.5, 1.5)
     end
     bigSpr(headSprite, dx-spriteSize/2, dy-spriteSize/2, spriteSize, not facing)
     bigSpr(sprite, dx-spriteSize/2, dy-spriteSize/2, spriteSize, not facing)
+    centerPrint("\#0"..flr((kbMult - 1) * 100).."%", dx, dy - 8, 7)
     --circfill(x, y, 1, 8)
     --rectfill(x - size/2, y - size/2, x + size/2, y + size/2, 8)
 end

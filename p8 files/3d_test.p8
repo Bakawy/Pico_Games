@@ -1,9 +1,9 @@
 pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
-#include scripts/3d_test/main.lua
-#include scripts/3d_test/player.lua
-#include scripts/3d_test/helper.lua
+#include ../scripts/3d_test/main.lua
+#include ../scripts/3d_test/player.lua
+#include ../scripts/3d_test/helper.lua
 __gfx__
 00000000cccccccc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000cccccccc0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
