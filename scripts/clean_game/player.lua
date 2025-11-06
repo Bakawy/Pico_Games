@@ -11,7 +11,7 @@ function getPlayerState()
 end
 
 function updatePlayer()
-    local speed = 0.75
+    local speed = 1
     local dir = {0, 0}
     if (ttn(L)) dir[1] -= 1
     if (ttn(R)) dir[1] += 1
@@ -21,11 +21,14 @@ function updatePlayer()
         dir = atan2(dir[1], dir[2])
         x += speed * cos(dir)
         y += speed * sin(dir)
+
+        x = mid(r, x, mapData.w * 8 - r)
+        y = mid(r, y, mapData.h * 8 - r)
     end
 end
 
 function drawPlayer()
-    circfill(x, y, r, 11)
+    circfill(x, y, r, 8)
 end
 
 end

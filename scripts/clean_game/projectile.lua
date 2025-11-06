@@ -15,10 +15,19 @@ Projectile = Class:new({
     dr = 0,
     col = 0,
     sprite = nil,
+    tie = nil,
+    drawTie = false,
     dead = false,
     onEnemy = nil,
     onDead = nil,
     onPlayer = nil,
+    onFlag0 = nil,
+    update = function(_ENV)
+        drawTie = false
+        if (tie and tie.dead) tie = nil
+        move(_ENV)
+        collide(_ENV)
+    end,
     move = function(_ENV) 
         x += speed * cos(dir)
         y += speed * sin(dir)
@@ -31,12 +40,13 @@ Projectile = Class:new({
             len -= 1
             if (len <= 0) dead = true
         end
+        --[[
         if x != mid(-r,x,128+r) or y != mid(-r,y,128+r) then
             dead = true
         end
+        ]]
     end,
     collide = function(_ENV) 
-        --[[
         if onEnemy then
             for e in all(enemies) do
                 if dist(x, y, e.x, e.y) < r + e.r then
@@ -44,14 +54,31 @@ Projectile = Class:new({
                 end
             end
         end
-        ]]
         if onPlayer then
             if dist(x, y, px, py) < r + pr then
                 onPlayer(_ENV)
             end
         end
+        if onFlag0 then
+            local mx, my = flr(x/8), flr(y/8)
+            local flag, fx, fy = false, nil, nil
+            if tie then
+                flag, fx, fy = los(x, y, tie.x, tie.y)
+                flag = not flag
+            end
+            if fget(mget(mx, my), 0) then
+                onFlag0(_ENV, mx, my)
+            end
+            if flag then
+                onFlag0(_ENV, fx, fy)
+            end
+        end
     end,
     draw = function(_ENV)
+        if tie and not drawTie then
+            line(x, y, tie.x, tie.y, col)
+            tie.drawTie = true
+        end
         if sprite then
             local halfSize = r
             local sx, sy = (sprite % 16) * 8, flr(sprite / 16) * 8
@@ -67,8 +94,7 @@ function updateProjectiles()
     player = getPlayerState()
     px, py, pr = player.x, player.y, player.r
     for p in all(projectiles) do
-        p:move()
-        p:collide()
+        p:update()
         if p.dead then 
             if (p.onDead) p:onDead()
             del(projectiles, p) 

@@ -30,46 +30,38 @@ local weapons = {
         name = "ball",
     },
 }
-local y = 40
-local size = 16
-local weaponsPerRow = 7
-local length = size * 9/8 * min(#weapons - 1, weaponsPerRow - 1)
+local y, size, weaponsPerRow = 40, 16, 7
+local size98, size25 = size * 9/8, size * 2.5
+local length, roww = size98 * min(#weapons - 1, weaponsPerRow - 1), weaponsPerRow * size98
 local x =  64 - length/2
 
 function initWeaponMenu()
     buttons = {}
-    local x = x + weaponsPerRow * size * 9/8
-    local y = y - size * 2.5
-    i = 0
+    local x, y, i = x + roww, y - size25, 0
     for w in all(weapons) do 
-        if (i % weaponsPerRow == 0)  then 
-            y += size * 2.5
-            x -= weaponsPerRow * size * 9/8
+        if i % weaponsPerRow == 0 then 
+            y += size25
+            x -= roww
         end 
 
+        local wid=w.id
+        local function click()
+        global.gameState=0
+        setWeapon(wid)
+        initGame()
+        end
+
+        for i=0,1 do
         Button:new({
-            x = x,
-            y = y,
-            size = size,
-            sprite = w.id,
-            onClick = function (_ENV)
-                global.gameState = 0
-                setWeapon(w.id)
-                initGame()
-            end
-        }, buttons)
-        Button:new({
-            x = x,
-            y = y + size,
-            size = size,
-            sprite = w.id + 16,
-            onClick = function (_ENV)
-                global.gameState = 0
-                setWeapon(w.id)
-                initGame()
-            end
-        }, buttons)
-        x += size * 9/8
+            x=x,
+            y=y+i*size,
+            size=size,
+            sprite=wid+i*16,
+            onClick=click
+        },buttons)
+        end
+        
+        x += size98
         i += 1
     end
 end
@@ -91,19 +83,17 @@ function drawWeaponMenu()
     for b in all(buttons) do
         b:draw()
     end
-    local x = x + weaponsPerRow * size * 9/8
-    local y = y - size * 2.5
-    local i = 0
+    local x, y, i = x + roww, y - size25, 0
     for w in all(weapons) do 
-        if (i % weaponsPerRow == 0)  then 
-            y += size * 2.5
-            x -= weaponsPerRow * size * 9/8
+        if i % weaponsPerRow == 0  then 
+            y += size25
+            x -= roww
         end 
 
         centerPrint("\#3"..w.name, x, 2 * size + y + (i%2==0 and 0 or 6), 1)
-        centerPrint("\#3"..dget(w.id), x, 2 * size + y + (i%2==0 and 0 or 6) + 6, 1)
+        centerPrint("\#0"..(dget(w.id) == 0 and "" or flr(dget(w.id))), x, 2 * size + y + (i%2==0 and 0 or 6) + 12, 1)
         --circfill(x, 2 * size + y, 2, 13)
-        x += size * 9/8
+        x += size98
         i += 1
     end
 end

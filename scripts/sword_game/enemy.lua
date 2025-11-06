@@ -1,7 +1,6 @@
 do
 
-local spawnDuration = 60
-local px, py, pr = 64, 64, 8
+local spawnDuration, px, py, pr = 60, 64, 64, 8
 
 local function checkWeapon(enemy)
 
@@ -16,18 +15,15 @@ local function checkWeapon(enemy)
         if (isSwing() and dist(enemy.x, enemy.y, h.x, h.y) < enemy.size + h.r) then
             addAmmo()
             local rx, ry = h.x - px, h.y - py
-            local rlen = sqrt(rx*rx + ry*ry)
-
-            local dir = -sgn(wv)  -- PICO-8 has sgn()
+            local rlen, dir = sqrt(rx*rx + ry*ry), -sgn(wv)
             local tx, ty = -ry*dir, rx*dir
             local ux, uy, _ = vnorm(tx, ty)
 
             local linearSpeed = abs(wv) * rlen
 
-            enemy.hit = atan2(ux, uy) + randDec(-0.07, 0.07)
+            enemy.hit, enemy.noHit = atan2(ux, uy) + randDec(-0.07, 0.07), 10
             if (direct) enemy.hit = atan2(rx, ry) + randDec(-0.07, 0.07)
             enemy.kb += 0.2--mid(0.08, speed * 0.25, 0.28)
-            enemy.noHit = 10
             break
         end
     end
@@ -40,17 +36,17 @@ Enemy = Class:new({
     speed = 0.3,
     dmg = 5,
     def=1,
-    hit = false,
-    dead = false,
+    --hit = false,
+    --dead = false,
     stun = 0,
     push = {mag=0, dir=0},
     kb = 1,
     spawn = 0,
     noHit = 0,
     col = 0,
-    onHit = nil,
-    onUpdate = nil,
-    onPlayer = nil,
+    --onHit = nil,
+    --onUpdate = nil,
+    --onPlayer = nil,
     toh = true, --Trigger Weapon On Hit
     behavior = function(_ENV) 
         local dir = atan2(px - x, py - y)
@@ -83,26 +79,7 @@ Enemy = Class:new({
             push = {mag=dmg * kb * def, dir=hit}
             hit = false
 
-            local mag = 2
-            for i=1, 10 do
-                local angle = randDec(0, 1)
-                local dx, dy = mag * cos(angle), mag * sin(angle)
-                local radius = 5
-                local len = 10
-                Particle:new({
-                    x = x,
-                    dx = dx,
-                    ddx = -dx/len,
-                    y = y,
-                    dy = dy,
-                    ddy = -dy/len,
-                    r = radius,
-                    dr = -radius/len,
-                    len = len,
-                    col = col
-                },particles)
-            end
-
+            particleBurst(x, y, 2, 5, 10, 10, col)
             sfx(4)
         end
         ::skip::
@@ -110,8 +87,8 @@ Enemy = Class:new({
     end,
     move = function(_ENV)
         if push.mag > 0 then
-            x += cos(push.dir) * push.mag * deltaTime
-            y += sin(push.dir) * push.mag * deltaTime
+            x += cos(push.dir) * push.mag
+            y += sin(push.dir) * push.mag
             push.mag -= 0.5
         end
         if stun > 0 then
@@ -119,8 +96,8 @@ Enemy = Class:new({
             return
         end
         bmove = behavior(_ENV)
-        x += cos(bmove.dir) * bmove.mag * speed * deltaTime
-        y += sin(bmove.dir) * bmove.mag * speed * deltaTime
+        x += cos(bmove.dir) * bmove.mag * speed
+        y += sin(bmove.dir) * bmove.mag * speed
 
         if x + size < 0 or x - size > 128 or y + size < 0 or y - size > 128 then
             dead = true
@@ -139,31 +116,26 @@ Enemy = Class:new({
 enemies = {}
 
 local function deathParticle(enemy)
-    local dir = enemy.push.dir - 0.5--atan2(enemy.x - 64, enemy.y - 64) - 0.5
-    local mag = 3
-    for i=1, 10 do
-        local angle = dir + randDec(-0.1, 0.1)
-        local dx, dy = mag * cos(angle), mag * sin(angle)
-        local radius = 7
-        Particle:new({
-            x = enemy.x,
-            dx = dx,
-            ddx = -dx/30,
-            y = enemy.y,
-            dy = dy,
-            ddy = -dy/30,
-            r = radius,
-            dr = -radius/30,
-            len = 30,
-            col = enemy.col
-        },particles)
-    end
+    particleBurst(enemy.x, enemy.y, 3, 7, 30, 10, enemy.col, enemy.push.dir - 0.5, 0.2)
 end
 
-function spawnEnemy(count)
+function spawnEnemy(count, typeTbl)
+    if typeTbl == 1 then
+        typeTbl = {2}--{15}
+    elseif typeTbl == 2 then
+        typeTbl = {4,5,6}
+    elseif typeTbl == 3 then
+        typeTbl = {7,8,9}
+    elseif typeTbl == 4 then
+        typeTbl = {10,11,12}
+    elseif typeTbl == nil then
+        typeTbl = {4,5,6,7,8,9}--{4,5,6,7,8,9,10,11,12}
+    end
+
     count = count or 1
+    ? count
     for i=1,count do
-        local t = rnd({4, 5, 6, 7, 8, 9, 10, 11, 12})
+        t = rnd(typeTbl)
         local tTable = {
             [4] = {
                 dmg=5.5,
@@ -361,8 +333,9 @@ function spawnEnemy(count)
                                 playerHit(atan2(px - x, py - y), 7)
                             end,
                             draw = function(_ENV)
-                                circfill(x,y,size+2,col)
-                                circfill(x,y,size,13)
+                                circ(x,y,size,col)
+                                circ(x,y,size + 1,col)
+                                circ(x,y,size + 2,col)
                             end
                         }, projectiles)
                     end
@@ -373,7 +346,7 @@ function spawnEnemy(count)
                 def = 0.5,
                 state = 0,
                 speed = 1.75,
-                dmg=3,
+                dmg=3.5,
                 moveDir = nil,
                 behavior = function(_ENV)
                     local mag = 1
@@ -455,12 +428,10 @@ function updateEnemies()
     for e in all(enemies) do
         e:update()
         if e.dead then
-            score += 1
             addColor(e.col, 1)
             deathParticle(e)
             sfx(2)
             del(enemies, e)
-            spawnEnemy()
         end
     end
 end
@@ -469,12 +440,14 @@ end
 
 function drawEnemies()
     for e in all(enemies) do
+        local x, y, size, col = e.x, e.y, e.size, e.col
         if e.spawn < spawnDuration then
-            pal(8, e.col)
-            spr(2, e.x - 4, e.y - 4)
+            pal(2, col)
+            sspr(88, 0, 16, 16, x-8, y-8)
             pal(0)
         else
-            circfill(e.x, e.y, e.size, e.col)
+            circfill(x, y, size + 1, 1)
+            circfill(x, y, size, col)
         end
     end
 end

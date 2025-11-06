@@ -79,4 +79,105 @@ function dist(x1, y1, x2, y2)
     return sqrt(dx*dx + dy*dy) * 16
 end
 
+function circleLine(cx, cy, r, x1, y1, x2, y2)
+    local ABx, ABy, ACx, ACy = x2 - x1, y2 - y1, cx - x1, cy - y1
+    local ab2 = ABx^2 + ABy^2
+    local t = mid(0, (ACx * ABx + ACy * ABy) / ab2, 1)
+    local Px, Py = x1 + t * ABx, y1 + t * ABy
+    local dx, dy = cx - Px, cy - Py
+    return dx*dx + dy*dy <= r*r
+end
+
+local TILE_SIZE = 8
+local MAP_W_TILES = 128
+local MAP_H_TILES = 64
+local FLAG_SOLID = 0
+local HUGE = 32767
+
+function los(x1_px, y1_px, x2_px, y2_px)
+  -- convert to tile coords (floating)
+  local x1 = x1_px / TILE_SIZE
+  local y1 = y1_px / TILE_SIZE
+  local x2 = x2_px / TILE_SIZE
+  local y2 = y2_px / TILE_SIZE
+
+  local sx, sy = flr(x1), flr(y1)
+  local tx, ty = flr(x2), flr(y2)
+
+  -- same-tile early out
+  if sx == tx and sy == ty then return true end
+
+  local dx = x2 - x1
+  local dy = y2 - y1
+  local stepx = (dx > 0) and 1 or -1
+  local stepy = (dy > 0) and 1 or -1
+
+  local mapx, mapy = sx, sy
+
+  -- DDA "time" per tile step along x/y
+  local delta_dist_x = (dx == 0) and HUGE or abs(1 / dx)
+  local delta_dist_y = (dy == 0) and HUGE or abs(1 / dy)
+
+  -- distance to first grid boundary
+  local side_dist_x = (dx > 0) and ((sx + 1 - x1) * delta_dist_x)
+                               or  ((x1 - sx)     * delta_dist_x)
+  local side_dist_y = (dy > 0) and ((sy + 1 - y1) * delta_dist_y)
+                               or  ((y1 - sy)     * delta_dist_y)
+
+  for i=1, 256 do
+    -- step to next tile boundary
+    if side_dist_x < side_dist_y then
+      side_dist_x += delta_dist_x
+      mapx += stepx
+    else
+      side_dist_y += delta_dist_y
+      mapy += stepy
+    end
+
+    -- bounds (no wrap)
+    if mapx < 0 or mapy < 0 or mapx >= MAP_W_TILES or mapy >= MAP_H_TILES then
+      return true--false
+    end
+
+    -- reached target tile?
+    if mapx == tx and mapy == ty then
+      return true
+    end
+
+    -- blocked by solid tile?
+    if fget(mget(mapx, mapy), FLAG_SOLID) then
+      return false, mapx, mapy
+    end
+  end
+
+    stop()
+    return false, mapx, mapy
+end
+
+function lerp(a, b, t)
+    return a * (1 - t) + b * t
+end
+
+function wait(frames)
+    for i=1,frames do
+        yield()
+    end
+end
+
+routines = {}
+
+function addRoutine(fn)
+    local co = cocreate(fn)
+    add(routines, co)
+end
+
+function runRoutines()
+    for r in all(routines) do
+        local ok, done = coresume(r)
+        if not ok or costatus(r) == "dead" then
+            del(routines, r)
+        end
+    end
+end
+
 end

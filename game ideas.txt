@@ -6,6 +6,7 @@
 └Tower Defense game with more improv and action than strategy
 └enemies drop tools the player uses for combat (probably requires artist) 
 * survival game with random disasters
+* Sword Game combat but mouse only and more beginner friendly
 
 + A complete arcade game with a definite ending and a UFO 50 like difficulty curve
 + A balatro like game (strategize different passive abilities to meet a certain score) but in an action game rather than a stragety game

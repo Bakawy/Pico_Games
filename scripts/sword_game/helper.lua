@@ -1,8 +1,7 @@
 do
 
 function dist(x1, y1, x2, y2)
-    local dx = x2 - x1
-    local dy = y2 - y1
+    local dx, dy = x2 - x1, y2 - y1
     return sqrt(dx*dx + dy*dy)
 end
 
@@ -11,8 +10,7 @@ function randDec(min, max)
 end
 
 function cycle(tbl, f, offset)
-    local offset = offset or 0
-    local interval = f * #tbl
+    local offset, interval = offset or 0, f * #tbl
     local index = flr(((frame + offset) % interval) / (interval / #tbl)) + 1
     return tbl[index]
 end
@@ -48,6 +46,27 @@ end
 
 function dot(a1, a2)
   return cos(a1)*cos(a2) + sin(a1)*sin(a2)
+end
+
+routines = {}
+
+function addRoutine(fn)
+    local co = cocreate(fn)
+    add(routines, co)
+end
+
+function runRoutines()
+    for r in all(routines) do
+        local ok, done = coresume(r)
+        if not ok or costatus(r) == "dead" then
+            del(routines, r)
+        end
+    end
+end
+
+function playerHasMoved()
+    local px, py = getPlayerPos()
+    return px != 64 or py != 64 or #enemies != 0
 end
 
 end

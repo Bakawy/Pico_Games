@@ -16,12 +16,11 @@ Button = Class:new({
     y = 64,
     size = 8,
     sprite = 0,
-    col = nil,
     draw = function(_ENV) 
         local halfSize = size/2
         if col then
             rectfill(x - halfSize, y - halfSize, x + halfSize, y + halfSize, col)
-        elseif (size == 8) then
+        elseif size == 8 then
             spr(sprite, x - halfSize, y - halfSize)
         else
             local sx, sy = (sprite % 16) * 8, flr(sprite / 16) * 8
@@ -43,23 +42,7 @@ local input1, input2, combine, goBack
 local colorButtons = {}
 
 function initCombineMenu()
-    colorButtons = {}
-    buttons = {}
-    for i=4,12 do 
-        add(colorButtons, Button:new({
-            y = 96,
-            x = 10 * i - 40 + 10,
-            col = i,
-            onClick = function ()
-                if selected == 1 then
-                    input1.col = i
-                elseif selected == 2 then
-                    input2.col = i
-                end
-            end
-        }, buttons))
-    end
-
+    colorButtons, buttons = {}, {}
     for i=4,12 do 
         add(colorButtons, Button:new({
             y = 96,
@@ -124,9 +107,7 @@ function initCombineMenu()
     }, buttons)
 
 
-    weaponColors = getWeaponColors()
-    input1.col = nil
-    input2.col = nil
+    weaponColors, input1.col, input2.col = getWeaponColors(), nil, nil
 end
 
 function updateCombineMenu()

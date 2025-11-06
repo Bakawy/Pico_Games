@@ -1,15 +1,8 @@
 do
 
-local sprite = 32
-local size = 64--64
+local sprite, size = 32, 64
 local pixelSize = size/8 
-local halfPixel = pixelSize/2
-local y_top = 64 - size
-local x = 64 - size/2
-local relx = 0
-local rely = 0
-local drawColor = 1
-local noClick = 0
+local halfPixel, y_top, x, relx, rely, drawColor, noClick = pixelSize/2, 64 - size, 64 - size/2, 0, 0, 1, 0
 --[[    Color stat list
     4 +kb
     5 +weapon turn
@@ -23,6 +16,7 @@ local noClick = 0
 ]]
 local weaponColors = {
     [1] = 0,
+    [2] = 0,
     [4] = 0,
     [5] = 0,
     [6] = 0,
@@ -76,22 +70,21 @@ function getWeaponColors()
 end
 
 function initDrawMenu()
-    sprite = getWeapon()
-    noClick = 60
-    drawColor = 1
+    sprite, noClick, drawColor = getWeapon(), 60, 1
+    poke(0x5f55, 0xa0)
+    cls(3)
+    poke(0x5f55, 0x80)
+    for p in all(particles) do p.spawnBG = false end
 end
 
 function updateDrawMenu()
     sprite = getWeapon()   
     if (sprite == 35) sprite = 34 
     local cx, cy = getCursorPos()
-    relx = cx - x
-    rely = cy - y_top
-    local ix = flr(relx / pixelSize)
-    local iy = flr(rely / pixelSize)
+    relx, rely = cx - x, cy - y_top
+    local ix, iy = flr(relx / pixelSize), flr(rely / pixelSize)
     if ttn(X) and noClick < 0 then
         local sx, sy = ix + 8 * (sprite % 16), iy + 8 * flr(sprite/16)
-        --stop(sx.." "..sy.." "..sget(sx, sy), 1, 1)
         local col = sget(sx, sy)
         if ix == -1 and iy == 3 then
             gameState = 2
@@ -113,7 +106,6 @@ function updateDrawMenu()
             if ttnp(X) then
                 gameState = 0
                 initGame()
-                kills = 0
                 setWeaponStats(countColors(sprite))
             end
         end
@@ -125,43 +117,35 @@ function drawDrawMenu()
 
     spawnBackgroundParticles()
 
-    local sx, sy = (sprite % 16) * 8, flr(sprite / 16) * 8 
-    local y_bot = 64          
-    
+    local sx, sy, y_bot = (sprite % 16) * 8, flr(sprite / 16) * 8, 64     
     sspr(sx,     sy,   8, 8, x + 1, y_top, size, size)
     sspr(sx, sy + 8,   8, 8, x + 1, y_bot, size, size)
-    local px = x + -1 * pixelSize + halfPixel
+    local px, py = x + -1 * pixelSize + halfPixel, y_top + 3 * pixelSize + halfPixel
+    local cx, cy = px - halfPixel, py - halfPixel
 
-    local py = y_top + 3 * pixelSize + halfPixel
     pal(2, cycle({4,4,6,4,6,6,5,6,5,5,4,5}, 60, 120), 0)
     pal(3, cycle({5,6,5,5,4,5,4,4,6,4,6,6}, 60, 120), 0)
     pal(4, cycle({7,8,9}, 60, 120), 0)
-    sspr(cycle({0, 8, 16, 24}, 30), 8, 8, 8, px - halfPixel + 1, py - halfPixel, pixelSize, pixelSize, flip, flip)
+    sspr(cycle({0, 8, 16, 24}, 30), 8, 8, 8, cx + 1, cy, pixelSize, pixelSize, flip, flip)
     pal(0)
     for i = 4, 12 do
         py = y_top + i * pixelSize + halfPixel
-        rectfill(px - halfPixel + 1, py - halfPixel, px + halfPixel, py + halfPixel - 1, i)
+        cy = py - halfPixel
+        rectfill(cx + 1, cy, px + halfPixel, py + halfPixel - 1, i)
         if weaponColors[i] < 0 then
-            sspr(32, 0, 8, 8, px - halfPixel, py - halfPixel, pixelSize + 1, pixelSize)
+            sspr(32, 0, 8, 8, cx, cy, pixelSize + 1, pixelSize)
         else 
             --local text = tostr(weaponColors[i])
             local len = print(text, 0, -10, 1)
-            centerPrint(weaponColors[i], px + 2, py - halfPixel + 4, 1)
+            centerPrint(weaponColors[i], px + 2, cy + 4, 1)
         end
     end 
     
     if relx >= -pixelSize and relx < size and rely >= 0 and rely < size * 2 then
     
-        local ix = flr(relx / pixelSize)
-        local iy = flr(rely / pixelSize)
+        local ix, iy = flr(relx / pixelSize), flr(rely / pixelSize)
 
-
-        ix = ix
-        iy = iy
-
-
-        local px = x + ix * pixelSize + halfPixel
-        local py = y_top + iy * pixelSize + halfPixel
+        local px, py = x + ix * pixelSize + halfPixel, y_top + iy * pixelSize + halfPixel
 
         --circfill(px, py, 2, 1)
         rect(px - halfPixel + 1, py - halfPixel, px + halfPixel, py + halfPixel - 1, drawColor)
