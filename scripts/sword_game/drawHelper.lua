@@ -84,7 +84,7 @@ function centerPrint(text, x, y, col)
 end
 
 function spawnBackgroundParticles()
-    for i=1,100-#particles do 
+    for i=1,200-#particles do 
         local r, dir = randDec(1, 16), sgn(randDec(-1, 1))
         Particle:new({
             x = dir == 1 and -r or 128+r,

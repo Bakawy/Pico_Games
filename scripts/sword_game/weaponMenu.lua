@@ -6,12 +6,12 @@ local weapons = {
         name = "sword",
     },
     {
-        id = 33,
-        name = "cannon",
-    },
-    {
         id = 34,
         name = "mask",
+    },
+    {
+        id = 33,
+        name = "cannon",
     },
     {
         id = 36,
@@ -21,16 +21,19 @@ local weapons = {
         id = 37,
         name = "wrench",
     },
+    
     {
         id = 38,
-        name = "potion",
+        name = "shield",--"potion",
     },
+    
     {
         id = 39,
         name = "ball",
     },
 }
-local y, size, weaponsPerRow = 40, 16, 7
+local y, size, weaponsPerRow = 40, 16, min(7, winCount + 1)
+weapons = pack(unpack(weapons, 1, weaponsPerRow))
 local size98, size25 = size * 9/8, size * 2.5
 local length, roww = size98 * min(#weapons - 1, weaponsPerRow - 1), weaponsPerRow * size98
 local x =  64 - length/2
@@ -38,6 +41,7 @@ local x =  64 - length/2
 function initWeaponMenu()
     buttons = {}
     local x, y, i = x + roww, y - size25, 0
+    dset(34, max(dget(34), dget(35)))
     for w in all(weapons) do 
         if i % weaponsPerRow == 0 then 
             y += size25
@@ -46,19 +50,19 @@ function initWeaponMenu()
 
         local wid=w.id
         local function click()
-        global.gameState=0
-        setWeapon(wid)
-        initGame()
+            gameState=0
+            setWeapon(wid)
+            initGame()
         end
 
         for i=0,1 do
-        Button:new({
-            x=x,
-            y=y+i*size,
-            size=size,
-            sprite=wid+i*16,
-            onClick=click
-        },buttons)
+            Button:new({
+                x=x,
+                y=y+i*size,
+                size=size,
+                sprite=wid+i*16,
+                onClick=click
+            },buttons)
         end
         
         x += size98
@@ -76,7 +80,6 @@ function updateWeaponMenu()
 end
 
 function drawWeaponMenu()
-    --rrectfill(x - size*0.5 , y - 20, 9/8 * #weapons - (x + size*0.5), 3.2 * size, 6, 3)
     spawnBackgroundParticles()
 
     centerPrint("\#3choose a weapon", 64, y - 16, 1)

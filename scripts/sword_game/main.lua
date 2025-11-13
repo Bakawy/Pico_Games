@@ -1,48 +1,36 @@
 do
 
-L, R, U, D, O, X, frame, roundCount, wave, gameState, score, global, showHitbox, noClick = {5, 1}, {3, 1}, {4, 1}, {0, 1}, {4, 0}, {5, 0}, 0, 0, 0, 4, 1000, _ENV, false, 0
-cartdata("sword_game")
-local normPalete = {
-    [0] = -1,
-    [1] = 0,
-    [2] = 5,
-    [3] = 7,
-    [4] = 8,
-    [5] = 10,
-    [6] = -4,
-    [7] = -7,
-    [8] = 2,
-    [9] = -5,
-    [10] = 14,
-    [11] = -9,
-    [12] = 12,
-    [13] = -13,
-    [14] = -6,
-    [15] = -12,
-    }
-local waveData = {
-    --{generic, primary, secondary, tertiary}
-    {
-        {1},
-        {2},
-        {2, 1},
-    },
-    {
-        {2,1},
-        {3,1},
-        {3,2},
-    },
-    {
-        {3,1},
-        {1,3},
-        {2,2,1},
-    },
-    {
-        {1,1,1},
-        {2,1,1},
-        {2,2,1},
-    },
-}
+--[[
+    cart data
+    0 - weapons unlocked
+    weapon ids - weapon highscore
+]]
+cartdata("bakawi_sword_game")
+L, R, U, D, O, X, frame, roundCount, wave, gameState, score, global, noClick, winCount = {5, 1}, {3, 1}, {4, 1}, {0, 1}, {4, 0}, {5, 0}, 0, 0, 0, 4, 1000, _ENV, 0, dget(0)
+waveString, waveData = [[
+1 2 3 01
+11 21 31 02
+21 22 32 03
+31 13 22 001
+111 211 221 003
+6 33 402 004
+221 321 322 0001
+032 042 053 0002
+3001 3101 3111
+0311 0421 0531 0004
+]], {{{}}}
+for i=1,#waveString-1 do
+    local char, lastRound = waveString[i], waveData[#waveData]
+    local code = ord(char)
+    if code == 10 then
+        add(waveData, {})
+        add(waveData[#waveData], {})
+    elseif code == 32 then
+        add(lastRound, {})
+    else
+        add(lastRound[#lastRound], tonum(char))
+    end
+end
 
 function _init()
     cls()
@@ -56,16 +44,39 @@ function _init()
     map()
     poke(0x5f55, 0x80)
 
+    --[[
     menuitem(1, "infinite color", debugInfiniteColors)
     menuitem(2, "toggle hitbox", function()
         showHitbox = not showHitbox
     end)
+    ]]
     menuitem(3, "reset save data", function()
-        for i=0, 63 do 
-            dset(i, 0)
-        end
+        menuitem(3, "are you sure?", function()
+            for i=0, 63 do 
+                dset(i, 0)
+            end
+            run()
+        end)
+        return true
     end)
-    pal(normPalete, 1)
+    pal({
+        [0] = -1,
+        0,
+        5,
+        7,
+        8,
+        10,
+        -4,
+        -7,
+        2,
+        -5,
+        14,
+        -9,
+        12,
+        -13,
+        -6,
+        3,
+    }, 1)
     initWeaponMenu()
 end
 
@@ -80,7 +91,7 @@ function _update60()
 
         local currentWave = waveData[roundCount]
         if playerHasMoved() then
-            score -= 1000 / (3600 * 5)
+            score -= 0.02777777777 --1000/(60 fps * 60 seconds * 10 minutes)
             if #enemies == 0 then
                 wave += 1
                 if wave > #currentWave then
@@ -126,12 +137,17 @@ function _draw()
         if not playerHasMoved() then
             weapon = getWeapon()
             if weapon == 32 then
-                centerPrint("swing your sword to hit enemies", 64, 32, 1)
-            elseif count({33,38,39}, weapon) != 0 then
+                centerPrint("swing your sword to hit enemies", 64, 26, 1)
+                centerPrint("wasd to move", 64, 32, 1)
+                centerPrint(isSwing() and "\f9swinging" or "\f4not swinging",64, 38, 1)
+            elseif count({33,39}, weapon) != 0 then
                 centerPrint("click to shoot", 64, 32, 1)
                 centerPrint("attack with melee to gain ammo", 64, 38, 1)
             elseif weapon == 36 then
                 centerPrint("click to dash into enemies", 64, 32, 1)
+            elseif weapon == 38 then
+                centerPrint("click to throw", 64, 26, 1)
+                centerPrint("walk to shield to pick up", 64, 32, 1)
             end
             centerPrint("\#3w", 64, 54, 1)
             centerPrint("\#3a", 54, 64, 1)
@@ -155,6 +171,7 @@ function _draw()
     elseif gameState == 5 then
         centerPrint(":)", 64, 64, 3)
         centerPrint("click to restart", 64, 70, 3)
+        centerPrint("score: "..flr(score), 64, 76, 3)
     end
     drawCursor()
     drawDebug()
@@ -178,8 +195,6 @@ function drawDebug()
         --print("rmb to change weapon sprite")
         centerPrint("round "..roundCount.."/"..#waveData, 64, 3, 1)
         centerPrint("wave "..wave.."/"..#waveData[roundCount], 64, 9, 1)
-    elseif gameState == 1 then
-        print("click away to fight", 1, 1, 1)
     end
 end
 
@@ -188,6 +203,7 @@ function winGame()
     if (score > dget(weapon)) dset(weapon, score)
     gameState, noClick = 5, 30
     music(0)
+    dset(0, winCount + 1)
 end
 
 function initGame()

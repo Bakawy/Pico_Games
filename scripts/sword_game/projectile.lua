@@ -38,7 +38,7 @@ Projectile = Class:new({
     collide = function(_ENV) 
         if onEnemy then
             for e in all(enemies) do
-                if dist(x, y, e.x, e.y) < size + e.size then
+                if e.spawn <= 0 and dist(x, y, e.x, e.y) < size + e.size then
                     onEnemy(_ENV, e)
                 end
             end
@@ -49,10 +49,9 @@ Projectile = Class:new({
             end
         end
         if onWeapon then
-            for h in all(getHitbox()) do
-                if dist(x, y, h.x, h.y) < size + h.r then
-                    onWeapon(_ENV, h)
-                end
+            local hitbox = getHitbox()
+            if dist(x, y, hitbox.x, hitbox.y) < size + hitbox.r then
+                onWeapon(_ENV, hitbox)
             end
         end
     end,

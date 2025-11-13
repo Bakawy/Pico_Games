@@ -148,6 +148,7 @@ function drawCombineMenu()
     sprPal(9, 32, 28, {[1]=4,[2]=6,[3]=5})
     sprPal(7, 40, 28, {[1]=-1,[3]=1})
     sprPal(9, 48, 28, {[1]=10,[2]=12,[3]=11})
+    centerPrint("\#3combine colors", 96, 22, 1)
 end
 
 end

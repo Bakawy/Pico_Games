@@ -15,21 +15,23 @@ local halfPixel, y_top, x, relx, rely, drawColor, noClick = pixelSize/2, 64 - si
     12 +++special -weapon turn
 ]]
 local weaponColors = {
-    [1] = 0,
-    [2] = 0,
-    [4] = 0,
-    [5] = 0,
-    [6] = 0,
-    [7] = 0,
-    [8] = 0,
-    [9] = 0,
-    [10] = 0,
-    [11] = 0,
-    [12] = 0,
-    [13] = 99,
-    [14] = 99,
-    [15] = 99,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    99,
+    99,
+    99,
 }
+--[[
 local oppositeColors = {
     [4] = 9,
     [5] = 8,
@@ -41,6 +43,8 @@ local oppositeColors = {
     [11] = 12,
     [12] = 10,
 }
+]]
+local function opp(c) return c<10 and 13-c or 10+((c-9)%3) end
 
 function addColor(col, num)
     weaponColors[col] = mid(0, weaponColors[col] + num, 99)
@@ -80,6 +84,10 @@ end
 function updateDrawMenu()
     sprite = getWeapon()   
     if (sprite == 35) sprite = 34 
+    if sprite == 40 then 
+        sprite = 38 
+        setWeapon(38)
+    end
     local cx, cy = getCursorPos()
     relx, rely = cx - x, cy - y_top
     local ix, iy = flr(relx / pixelSize), flr(rely / pixelSize)
@@ -89,21 +97,21 @@ function updateDrawMenu()
         if ix == -1 and iy == 3 then
             gameState = 2
             initCombineMenu()
-        elseif ix == mid(0, ix, 7) and iy == mid(0, iy, 15) then
+        elseif within(ix, 0, 7) and within(iy, 0, 15) then
             if weaponColors[drawColor] != 0 and count({drawColor, 0, 1}, col) == 0 then
                 sset(sx, sy, drawColor)
                 if sprite == 34 then
                     if sy == 25 and (sx == 18 or sx == 21) then
                         sy -= 1
                     end
-                    sset(sx + 8, sy, oppositeColors[drawColor])
+                    sset(sx + 8, sy, opp(drawColor))
                 end
                 weaponColors[drawColor] -= 1
             end
         elseif ix == -1 then
             if (iy > 3 and iy < 13) drawColor = iy
         else
-            if ttnp(X) then
+            if ttnp(X) and cx > 64 then
                 gameState = 0
                 initGame()
                 setWeaponStats(countColors(sprite))
@@ -124,7 +132,7 @@ function drawDrawMenu()
     local cx, cy = px - halfPixel, py - halfPixel
 
     pal(2, cycle({4,4,6,4,6,6,5,6,5,5,4,5}, 60, 120), 0)
-    pal(3, cycle({5,6,5,5,4,5,4,4,6,4,6,6}, 60, 120), 0)
+    pal(1, cycle({5,6,5,5,4,5,4,4,6,4,6,6}, 60, 120), 0)
     pal(4, cycle({7,8,9}, 60, 120), 0)
     sspr(cycle({0, 8, 16, 24}, 30), 8, 8, 8, cx + 1, cy, pixelSize, pixelSize, flip, flip)
     pal(0)
@@ -135,7 +143,6 @@ function drawDrawMenu()
         if weaponColors[i] < 0 then
             sspr(32, 0, 8, 8, cx, cy, pixelSize + 1, pixelSize)
         else 
-            --local text = tostr(weaponColors[i])
             local len = print(text, 0, -10, 1)
             centerPrint(weaponColors[i], px + 2, cy + 4, 1)
         end
@@ -147,9 +154,12 @@ function drawDrawMenu()
 
         local px, py = x + ix * pixelSize + halfPixel, y_top + iy * pixelSize + halfPixel
 
-        --circfill(px, py, 2, 1)
         rect(px - halfPixel + 1, py - halfPixel, px + halfPixel, py + halfPixel - 1, drawColor)
     end
+
+    print("\#3fight", 102, 64, 1)
+    centerPrint("\#1\f4damage \f5speed \f6special", 64, 125)
+    centerPrint("\#1draw to improve stats", 64, 2, 3)
 end
 
 end

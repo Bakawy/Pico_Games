@@ -26,6 +26,11 @@ function mirrorX(a)
     return atan2(-cos(a), sin(a))
 end
 
+function within(x,min,max) return min<=x and x<=max end
+function to(ax,ay,bx,by) return atan2(bx-ax, by-ay) end
+function mdir(m,d) return {mag=m,dir=d} end
+function outxy(x,y,s) return x~=mid(s,x,128-s) or y~=mid(s,y,128-s) end
+
 function mirrorY(a)
     return atan2(cos(a), -sin(a))
 end
