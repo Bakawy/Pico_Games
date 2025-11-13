@@ -112,7 +112,20 @@ local spriteData = {
             debugSpecial = 1 + 5 * (special/108)
         end,
         onHit = function() 
-            local hitbox = getHitbox()[1]
+            local hitbox = getHitbox()
+            --[[
+            local noSpawn = false
+            for p in all(projectiles) do
+                if p.fireRate then
+                    if dist(hitbox.x, hitbox.y, p.x, p.y) < 3 + p.size then
+                        p.size += 3
+                        p.fireRate += debugSpecial
+                        noSpawn = true
+                    end
+                end
+            end
+            if (noSpawn) return
+            ]]
             Projectile:new({
                 x = hitbox.x,
                 y = hitbox.y,

@@ -11,3 +11,4 @@
 + A complete arcade game with a definite ending and a UFO 50 like difficulty curve
 + A balatro like game (strategize different passive abilities to meet a certain score) but in an action game rather than a stragety game
 └shmup?
++ Players craft passive abilities from parts, on [event] [action] but [modifier]

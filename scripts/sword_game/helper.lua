@@ -1,4 +1,3 @@
-do
 
 function dist(x1, y1, x2, y2)
     local dx, dy = x2 - x1, y2 - y1
@@ -72,6 +71,4 @@ end
 function playerHasMoved()
     local px, py = getPlayerPos()
     return px != 64 or py != 64 or #enemies != 0
-end
-
 end
