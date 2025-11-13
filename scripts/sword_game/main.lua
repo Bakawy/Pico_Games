@@ -37,7 +37,6 @@ function _init()
     poke(0x5f2d, 0x1 + 0x2)
     poke(0x5f5c, 255)
     --poke(0x5f34,0x2)
-    dset(0, 10)
 
     poke(0x5f55, 0xa0)
     cls(3)
