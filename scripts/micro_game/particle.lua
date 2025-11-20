@@ -4,7 +4,6 @@ Particle = Entity:new({
     dy = 0,
     ddy = 0,
     col = 0,
-    init = Entity.init,
     --sprite = nil
 }, particles)
 
@@ -19,7 +18,7 @@ function Particle.update(_ENV)
         len = 0
     end
 
-    if (frame - spawnFrame > len) dead = true
+    if (frame - spawnFrame > len) delete(_ENV)
 end
 
 function Particle.draw(_ENV)

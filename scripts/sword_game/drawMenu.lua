@@ -63,11 +63,13 @@ function countColors(sprite)
     return colors
 end
 
+--[[
 function debugInfiniteColors()
     for i=4,15 do
         weaponColors[i] = 99
     end
 end
+]]
 
 function getWeaponColors()
     return weaponColors
@@ -134,7 +136,7 @@ function drawDrawMenu()
     pal(2, cycle({4,4,6,4,6,6,5,6,5,5,4,5}, 60, 120), 0)
     pal(1, cycle({5,6,5,5,4,5,4,4,6,4,6,6}, 60, 120), 0)
     pal(4, cycle({7,8,9}, 60, 120), 0)
-    sspr(cycle({0, 8, 16, 24}, 30), 8, 8, 8, cx + 1, cy, pixelSize, pixelSize, flip, flip)
+    sspr(cycle({0, 8, 16, 24}, 30), 8, 8, 8, cx + 1, cy, pixelSize, pixelSize)
     pal(0)
     for i = 4, 12 do
         py = y_top + i * pixelSize + halfPixel

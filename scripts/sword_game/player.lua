@@ -375,8 +375,6 @@ function setWeaponStats(colors)
     weapon["setSpecial"](blue)
 end
 
-setWeaponStats({})
-
 function setWeaponColor(col)
     weaponColor = col
 end

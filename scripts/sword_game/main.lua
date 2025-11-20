@@ -6,7 +6,7 @@ do
     weapon ids - weapon highscore
 ]]
 cartdata("bakawi_sword_game")
-L, R, U, D, O, X, frame, roundCount, wave, gameState, score, global, noClick, winCount = {5, 1}, {3, 1}, {4, 1}, {0, 1}, {4, 0}, {5, 0}, 0, 0, 0, 4, 1000, _ENV, 0, dget(0)
+L, R, U, D, X, frame, roundCount, wave, gameState, score, global, noClick, winCount = {5, 1}, {3, 1}, {4, 1}, {0, 1}, {5, 0}, 0, 0, 0, 4, 1000, _ENV, 0, dget(0)
 waveString, waveData = [[
 1 2 3 01
 11 21 31 02
@@ -33,7 +33,6 @@ for i=1,#waveString-1 do
 end
 
 function _init()
-    cls()
     poke(0x5f2d, 0x1 + 0x2)
     poke(0x5f5c, 255)
     --poke(0x5f34,0x2)
@@ -95,10 +94,9 @@ function _update60()
             if #enemies == 0 then
                 wave += 1
                 if wave > #currentWave then
-                    gameState = 1
+                    gameState, projectiles = 1, {}
                     if (not waveData[roundCount + 1]) winGame()
                     initDrawMenu()
-                    projectiles = {}
                 else 
                     for i = 1, #currentWave[wave] do
                         spawnEnemy(currentWave[wave][i], i)
@@ -115,13 +113,15 @@ function _update60()
         updateCombineMenu()
     elseif gameState == 3 then
         cls(1)
-        if ((ttnp(O) or ttnp(X)) and noClick <= 0) run()
+        if (ttnp(X) and noClick <= 0) run()
     elseif gameState == 4 then
         cls(3)
         updateWeaponMenu()
+        
+        if (stat(4) != "") modSprites()
     elseif gameState == 5 then
         cls(1)
-        if ((ttnp(O) or ttnp(X)) and noClick <= 0) run()
+        if (ttnp(X) and noClick <= 0) run()
     end
     runRoutines()
     if (noClick >= 0) noClick -= 1
@@ -168,6 +168,7 @@ function _draw()
     elseif gameState == 4 then
         drawParticles()
         drawWeaponMenu()
+        ? stat(4), 0, 0
     elseif gameState == 5 then
         centerPrint(":)", 64, 64, 3)
         centerPrint("click to restart", 64, 70, 3)
@@ -189,12 +190,11 @@ function _draw()
 end
 
 function drawDebug()
-    camera()
     if gameState == 0 then
-        print("score: "..flr(score), 1, 1, 1)
+        ? "score: "..flr(score), 1, 1, 1
         --print("rmb to change weapon sprite")
-        centerPrint("round "..roundCount.."/"..#waveData, 64, 3, 1)
-        centerPrint("wave "..wave.."/"..#waveData[roundCount], 64, 9, 1)
+        centerPrint("round "..roundCount.."/"..#waveData, 65, 3, 1)
+        centerPrint("wave "..wave.."/"..#waveData[roundCount], 65, 9, 1)
     end
 end
 
@@ -214,6 +214,7 @@ function initGame()
     for p in all(particles) do 
         p.dx *= 20
     end
+    setWeaponStats(countColors(getWeapon()))
 end
 
 function ttn(input)--table btn
@@ -222,6 +223,19 @@ end
 function ttnp(input)
     return btnp(input[1], input[2])
 end
+
+
+
+function modSprites()
+    local pixels, x, y = split(stat(4)), 0, 16
+    for i, p in pairs(pixels) do
+        i -= 1
+        sset(i%64,i\64+16,p)
+    end
+    modSprites = function()end
+    --printh("", "@clip", true)
+end
+
 
 Class = setmetatable({
     new = function(_ENV,tbl, toTbl)
