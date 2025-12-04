@@ -14,7 +14,7 @@ function kill(_ENV, noShow)
 end
 
 Enemy = Entity:new({
-    speed = 0.25,
+    speed = 0.2,
     r = 5.65685424949,--sqrt(2 * (8/2)^2)
     sprite = 2,
     onClick = kill,

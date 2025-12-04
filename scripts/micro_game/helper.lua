@@ -6,7 +6,7 @@ function to(ax,ay,bx,by) return atan2(bx-ax, by-ay) end
 --function mirrorX(a) return atan2(-cos(a), sin(a)) end
 --function mirrorY(a) return atan2(cos(a), -sin(a)) end
 function within(min,x,max) return min<=x and x<=max end
-function lerp(a, b, t) return a + (b - a) * t end
+function lerp(a, b, t) return a + (b - a) * mid(0, t, 1) end
 
 --[[
 t table
@@ -67,4 +67,10 @@ function rspr(sx,sy,sw,sh,a,dx,dy,dw,dh)
             end
         end
     end
+end
+
+function getClosestEntities(x, y)
+    return qsort(copy(entities), function(a, b)
+          return dist(a.x,a.y,x,y) - dist(b.x,b.y,x,y)
+        end)
 end

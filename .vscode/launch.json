@@ -9,8 +9,8 @@
       "args": [
         "-run", "${workspaceFolder}/p8 files/micro_game.p8",
         //"-frameless", "1",
-        //"-width", "1000",
-        //"-height", "1000",
+        "-width", "128",
+        "-height", "128",
         //"-pixel_perfect", "0",
         //"-export", "${workspaceFolder}/build/sword_game.html",
       ]

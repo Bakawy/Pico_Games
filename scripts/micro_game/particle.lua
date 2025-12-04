@@ -1,4 +1,5 @@
 Particle = Entity:new({
+    layer = 10,
     len = 32767,
     dx = 0,
     dy = 0,

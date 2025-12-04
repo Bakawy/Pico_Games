@@ -29,16 +29,16 @@ function _init()
     })
     ]]
     Unit:new({systems={sword}})
-    Unit:new({systems={sword}})
-    Unit:new({systems={sword}})
-    Unit:new({systems={sword}})
+    Unit:new({systems={slingShot}})
+    Unit:new({systems={grabber}})
+    Unit:new({systems={mage}})
 end 
 
 function _update60()
     cls(7)
     updateCursor()
     
-    while #enemies < 5 and frame % 180 == 0 do
+    while #enemies < 4 and frame % 180 == 0 do
         Enemy:new()
     end
 
@@ -55,6 +55,12 @@ function _update60()
         if onGhost then
             for ghost in all(ghosts) do 
                 if (e != ghost and dist(x, y, ghost.x, ghost.y) < r + ghost.r) onGhost(_ENV, ghost)
+            end
+        end
+
+        if onUnit then
+            for unit in all(units) do 
+                if (e != unit and dist(x, y, unit.x, unit.y) < r + unit.r) onUnit(_ENV, unit)
             end
         end
     end
