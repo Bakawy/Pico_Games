@@ -36,14 +36,16 @@ function Unit.update(_ENV)
         x += move_speed * target[1]
         y += move_speed * target[2]
         facing = sgn(target[1]) == 1
-        dist_moved += move_speed
+        --dist_moved += move_speed
 
         if (x - r < 0 or x + r > 128) target[1] *= -1
         if (y - r < 0 or y + r > 128) target[2] *= -1
 
+        --[[
         if dist_moved >= move_dist then 
             target = false
         end
+        ]]
     end
 
     if dragged and not leftMouseDown then
@@ -63,9 +65,13 @@ function Unit.draw(_ENV)
     if (target) cycle += 32
     if (#holding > 0) cycle += 64
 
-    if not (target or #holding > 0) then
+    if not target then
         local wx, wy = x - 4 + (facing and 8 or 0), y + (cycle == 0 and 0 or 1)
         spr(weaponSprite, wx - 4, wy - 4, 1, 1, facing)
+    end
+
+    if target and showWeapon then
+        spr(weaponSprite, x - 4, y - 10)
     end
 
     spr(sprite + cycle, x - 4, y - 4, 1, 1, facing)
@@ -116,7 +122,7 @@ sword = {
 }
 slingShot = {
     init = function(_ENV)
-        weaponSprite, collectible = 21, {}
+        weaponSprite, collectible, showWeapon = 21, {}, true
     end,
     update = function(_ENV)
         while #collectible < 7 do 
@@ -175,9 +181,14 @@ grabber = {
 }
 mage = {
     init = function(_ENV)
-        progress, weaponSprite = 0, 53
+        progress, weaponSprite, magic = 0, 53, 0.005
     end,
     update = function(_ENV)
-        progress += 0.01
+        if progress >= 1 then
+            progress = 0
+            for enemy in all(enemies) do 
+                enemy:kill()
+            end
+        end
     end,
 }

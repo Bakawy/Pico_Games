@@ -32,6 +32,20 @@ function _init()
     Unit:new({systems={slingShot}})
     Unit:new({systems={grabber}})
     Unit:new({systems={mage}})
+
+    Projectile:new({
+        col = 12,
+        r = 10,
+        update = function(_ENV)
+            local angle = frame/3000
+            x = 64 + (64 - r) * cos(angle)
+            y = 64 + (64 - r) * sin(angle)
+        end,
+        onUnit = function(_ENV, unit)
+            if (not unit.magic) return
+            unit.progress += unit.magic
+        end,
+    })
 end 
 
 function _update60()
