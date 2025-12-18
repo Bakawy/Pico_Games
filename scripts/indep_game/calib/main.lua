@@ -1,33 +1,59 @@
-beat, lastTriggeredBeat, lastTick, musicLoops, spd, bpm = 0, -1, -1, 0, 0, 0
-events = {}
+beat, second, lastTriggeredBeat, lastTick, musicLoops, spd, bpm, offsetSec, fps = 0, 0, -1, -1, 0, 0, 0, 0, 60
 debugText = ""
 
 function _init()
-    music(3)
+    music(4)
     spd = peek(0x3200 + stat(46) * 68 + 65) --spd of sfx in channel 0
     bpm = 7229.50819/(4*spd)
+    
+
+    --[[
+    for i=4,14 do
+        addInput(i * 2, i % 2 == 1)
+    end
+    ]]
+    for i=4,19 do
+        addInput(i, i % 2 == 1)
+    end
+    for i=0,3 do 
+        addSound(i, 63)
+    end
 end
 
 function _update60()
     cls()
+    fps = stat(7)
     updateBeat()
-    updateEvents()
-
-    local angle = beat/-2
-    circfill(64 + 40 * cos(angle), 64 + 40 * sin(angle), 8, 8)
-    circfill(64, 64, 8, 12)
+    updateInputs()
+    updateSounds()
 end
 
 function _draw()
-   ? debugText 
-end
 
-function addEvent(beat, run, endBeat)
-    add(events, {
-        beat = beat,
-        run = run,
-        endBeat = endBeat,
-    })
+   --[[
+   local angle = beat/-2
+    circfill(64 + 40 * cos(angle), 64 + 40 * sin(angle), 8, 8)
+    circfill(64, 64, 8, 12)
+    ]]
+    clip(0, 0, 64, 128)
+    rectfill(0, 0, 128, 128, 1)
+    clip(64, 0, 64, 128)
+    rectfill(0, 0, 128, 128, 2)
+    clip(0, 0, 128, 128)
+    rectfill(62, 0, 66, 128, 0)
+
+    --[[
+    local height = interpolate(16, 32, beat % 1, easeOutExpo)
+    scaleSprite(1, 64, 64 - height, 32, height)
+    ]]
+
+    line(8, 56, 8, 72, 0)
+    for input in all(activeInputs) do 
+        local x = interpolate(120, 8, 1 - (input.second + offsetSec - second)/lookAheadSec, easeInQuad)
+        circfill(x, 64, 5, input.type and 14 or 12)
+    end
+
+    drawDebug()
 end
 
 function updateBeat()
@@ -38,39 +64,22 @@ function updateBeat()
     lastTick = ticks
 
     beat = max(beat, musicLoops * 8 + patternBeat)
-    ? beat
-    ? bpm
+    second = 60/bpm * beat
     if beat >= lastTriggeredBeat + 1 then
         lastTriggeredBeat += 1
         --sfx(63)
     end 
 end
 
-function updateEvents()
-    for event in all(events) do 
-        if beat >= event.beat then 
-            event:run()
-            if (not event.endBeat or beat >= event.endBeat) del(events, event)
-        end
+function drawDebug()
+    ? "", 1, -5, 7
+    ? "beat: "..beat
+    ? "time: "..second
+    ? "bpm: "..bpm
+    ? "offset ms: "..(offsetSec * 1000)
+    --[[
+    for offset in all(offsets) do 
+        ? offset * 1000
     end
+    ]]
 end
-
-function cheackInput(self)
-    local inputBeat = (self.beat + self.endBeat) / 2 -- - 17 * (bpm/60000) test offset
-    if btnp(4) then
-        debugText ..= (inputBeat - beat) * (60000/bpm) .. "ms\n"
-        del(events, self)
-    end
-end
-
---beat * (min/beat) * (60sec/min) * (1000ms/sec) = ms
-
-addEvent(1, function(self)
-    sfx(63)
-    addEvent(self.beat + 1, self.run)
-end)
-
---addEvent(2.5, cheackInput, 3.5)
---addEvent(3.5, cheackInput, 4.5)
---addEvent(4.5, cheackInput, 5.5)
---addEvent(5.5, cheackInput, 6.5)
