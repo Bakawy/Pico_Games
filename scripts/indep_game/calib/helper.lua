@@ -48,3 +48,28 @@ function qsort(t, cmp, i, j)
  end
  return t
 end
+
+imageData = {
+    {
+        x = 0,
+        y = 8,
+        w = 39,
+        h = 42
+    },
+    {
+        x = 40,
+        y = 8,
+        w = 39,
+        h = 42
+    },
+    {
+        x = 0,
+        y = 43,
+        w = 39,
+        h = 45
+    },
+}
+function drawImage(id, x, y)
+    local image = imageData[id]
+    sspr(image.x, image.y, image.w, image.h, x - image.w/2, y - image.h/2)
+end

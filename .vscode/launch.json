@@ -7,7 +7,7 @@
       "request": "launch",
       "runtimeExecutable": "/Applications/PICO-8.app/Contents/MacOS/pico8",
       "args": [
-        "-run", "${workspaceFolder}/p8_files/indep_game_calib.p8",
+        "-run", "${workspaceFolder}/p8_files/sword_game_2.p8",
         //"-frameless", "1",
         //"-width", "128",
         //"-height", "128",
