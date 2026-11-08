@@ -8,7 +8,8 @@
       "runtimeExecutable": "/Applications/PICO-8.app/Contents/MacOS/pico8",
       "args": [
         "-run",
-        "${workspaceFolder}/p8_files/florr_game.p8",
+        "${workspaceFolder}/rhythmove test/game.p8",
+        //"${workspaceFolder}/p8_files/indep_game_calib.p8",
         //"-frameless", "1",
         //"-width", "128",
         //"-height", "128",
