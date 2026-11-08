@@ -231,7 +231,6 @@
         <iframe width="100%" height="100%" src="game ideas.txt"></iframe>
     </div>
     <script>
-        // Apply dark/light mode class to game titles
         document.addEventListener('DOMContentLoaded', function () {
             const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
             const titles = document.querySelectorAll('.game-title');
@@ -240,6 +239,16 @@
                 title.classList.add(isDarkMode ? 'dark-mode' : 'light-mode');
             });
         });
+    </script>
+
+    <script type="module">
+        import { DiscordSDK } from "./discord-sdk.js"; // relative path matters
+
+        const discordSdk = new DiscordSDK("YOUR_CLIENT_ID");
+
+        await discordSdk.ready();
+        document.getElementById("status").textContent =
+        `Connected! Channel: ${discordSdk.channelId}, instance: ${discordSdk.instanceId}`;
     </script>
 </body>
 
