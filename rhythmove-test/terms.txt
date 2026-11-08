@@ -1,0 +1,43 @@
+PICO GAME TERMS OF SERVICE
+Last updated: November 8, 2026
+
+By playing Rhythmove (the "game"), made by Bakawy, you agree to these
+terms. If you don't agree, please don't play.
+
+1. USE OF THE GAME
+Rhythmove is free to play for personal, non-commercial use, as a Discord
+Activity or in a web browser.
+
+2. ACCEPTABLE USE
+You agree not to:
+- attempt to disrupt, overload, or break the game or its hosting;
+- use the game to break any law or Discord's Terms of Service
+  (https://discord.com/terms) or Community Guidelines.
+
+3. DISCORD
+When played on Discord, your use is also governed by Discord's Terms of
+Service and Community Guidelines. Rhythmove is an independent project
+and is not made or endorsed by Discord.
+
+4. CONTENT
+The game's code and artwork belong to their creator. Some music in the
+game is an arrangement of existing work, and rights to the original
+compositions remain with their respective owners. If you own rights to
+any content in the game and want it removed, contact us using the link
+below and it will be taken down.
+
+5. NO WARRANTY
+The game is provided "as is", without warranties of any kind. It may
+contain bugs, change, or become unavailable at any time.
+
+6. LIMITATION OF LIABILITY
+To the fullest extent allowed by law, the creator is not liable for any
+damages arising from your use of, or inability to use, the game.
+
+7. CHANGES
+These terms may be updated from time to time. The "Last updated" date
+above shows the latest version. Continuing to play means you accept the
+updated terms.
+
+8. CONTACT
+https://github.com/Bakawy/Pico_Games/issues
