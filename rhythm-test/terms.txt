@@ -1,11 +1,11 @@
 PICO GAME TERMS OF SERVICE
 Last updated: November 8, 2026
 
-By playing Rhythmove (the "game"), made by Bakawy, you agree to these
+By playing Pico Game (the "game"), made by Bakawi, you agree to these
 terms. If you don't agree, please don't play.
 
 1. USE OF THE GAME
-Rhythmove is free to play for personal, non-commercial use, as a Discord
+Pico Game is free to play for personal, non-commercial use, as a Discord
 Activity or in a web browser.
 
 2. ACCEPTABLE USE
@@ -16,7 +16,7 @@ You agree not to:
 
 3. DISCORD
 When played on Discord, your use is also governed by Discord's Terms of
-Service and Community Guidelines. Rhythmove is an independent project
+Service and Community Guidelines. Pico Game is an independent project
 and is not made or endorsed by Discord.
 
 4. CONTENT

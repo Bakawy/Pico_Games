@@ -1,12 +1,12 @@
 PICO GAME PRIVACY POLICY
 Last updated: November 8, 2026
 
-Rhythmove is a free rhythm game made by Bakawy, playable as a Discord
+Pico Game is a free rhythm game made by Bakawi, playable as a Discord
 Activity and in a web browser. This policy explains what information the
 game does and does not handle.
 
 1. INFORMATION WE COLLECT
-Rhythmove does not collect, store, or share any personal information.
+Pico Game does not collect, store, or share any personal information.
 - It does not ask for access to your Discord account (no username,
   avatar, email, friends list, or messages).
 - It has no accounts, logins, or servers of its own.
@@ -26,10 +26,10 @@ address from the game's host.
 The services that deliver the game have their own privacy policies:
 - Discord: https://discord.com/privacy
 - GitHub (hosting): https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement
-Rhythmove has no control over the data these services handle.
+Pico Game has no control over the data these services handle.
 
 4. CHILDREN
-Rhythmove does not knowingly collect information from anyone, including
+Pico Game does not knowingly collect information from anyone, including
 children. Use of Discord is subject to Discord's own age requirements.
 
 5. CHANGES
