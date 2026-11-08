@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Bakawi's PICO-8 Games</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
@@ -87,7 +88,8 @@
 
         .game-iframe {
             width: 100%;
-            height: calc(33.33vw * 0.75); /* 4:3 aspect ratio */
+            height: calc(33.33vw * 0.75);
+            /* 4:3 aspect ratio */
             position: relative;
             overflow: hidden;
         }
@@ -104,7 +106,7 @@
         .finished {
             color: rgb(0, 255, 0);
         }
-         
+
         .wip {
             color: rgb(88, 88, 255);
         }
@@ -117,17 +119,20 @@
             .games-container {
                 grid-template-columns: 1fr;
             }
+
             .game-wrapper {
                 width: 100vw;
             }
+
             .game-iframe {
                 height: calc(100vw * 0.75);
             }
         }
     </style>
 </head>
+
 <body>
-    <p class="finished" style="display:inline;">Finished</p> 
+    <p class="finished" style="display:inline;">Finished</p>
     <p class="wip" style="display:inline;">WIP</p>
     <p class="abondoned" style="display:inline;">Unfinished</p>
     <div class="games-container">
@@ -192,9 +197,15 @@
             </div>
         </div>
         <div class="game-wrapper">
-            <div class="game-title wip">Indep Game</div>
+            <div class="game-title abondoned">Indep Game</div>
             <div class="game-iframe">
                 <iframe src="pages/indep_game.html" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+        <div class="game-wrapper">
+            <div class="game-title wip">Florr Game</div>
+            <div class="game-iframe">
+                <iframe src="pages/florr_game.html" frameborder="0" allowfullscreen></iframe>
             </div>
         </div>
         <!-- Template -->
@@ -209,8 +220,10 @@
     </div>
     <div class="credits">
         <h1>Code I borrowed</h1>
-        <a href="https://www.lexaloffle.com/bbs/?tid=39016" target="_blank">Thick Line by freds72</a> Punch Game, Sword Game<br>
-        <a href="https://www.lexaloffle.com/bbs/?tid=34137" target="_blank">Rotating Sprites by greygraphics</a> Sword Game, Micro Game<br>
+        <a href="https://www.lexaloffle.com/bbs/?tid=39016" target="_blank">Thick Line by freds72</a> Punch Game, Sword
+        Game<br>
+        <a href="https://www.lexaloffle.com/bbs/?tid=34137" target="_blank">Rotating Sprites by greygraphics</a> Sword
+        Game, Micro Game<br>
         <a href="https://www.lexaloffle.com/bbs/?tid=49930" target="_blank">Triangle by dw817</a> Orb Game
     </div>
     <div class="ideas">
@@ -219,14 +232,15 @@
     </div>
     <script>
         // Apply dark/light mode class to game titles
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
             const titles = document.querySelectorAll('.game-title');
-            
+
             titles.forEach(title => {
                 title.classList.add(isDarkMode ? 'dark-mode' : 'light-mode');
             });
         });
     </script>
 </body>
+
 </html>
